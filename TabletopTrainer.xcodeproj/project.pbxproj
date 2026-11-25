@@ -10,11 +10,14 @@
 		0BB7284E5887CA820FC19BD0 /* FirebaseCoach.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD42F49547CCA8257F63D9FB /* FirebaseCoach.swift */; };
 		0EA971062B249511BF2CBCFC /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 892058C57C9826FCF4CD1AE7 /* Foundation.framework */; };
 		16908C901171C39404E04DE1 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 892058C57C9826FCF4CD1AE7 /* Foundation.framework */; };
+		1C3B75DDAB55F05D0A9A220C /* BladeMotionPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02431413B2A011B36352F529 /* BladeMotionPreview.swift */; };
 		32A9728A68B2798A42960F62 /* TablePlacement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E078C8B59BD3CB811BD60A4 /* TablePlacement.swift */; };
 		4DCC6EA44E63483C45A7A97C /* TrainerWorkflowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E9F2B4899832751DA250095 /* TrainerWorkflowTests.swift */; };
 		53E6B9802230939305332DA5 /* AirwayFrame.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7A9D03EF387C45153A13620 /* AirwayFrame.swift */; };
+		57C3DE6D9C307D47F5D448CC /* BladeRegistration.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3A87686C743088163823A70 /* BladeRegistration.swift */; };
 		7AC4A068DF665D8499F9F6BE /* TrainerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80EBF4655768DD5CD5CD505E /* TrainerApp.swift */; };
 		7CDF30330374CF3FE78D86EF /* Practice.swift in Sources */ = {isa = PBXBuildFile; fileRef = C08C7099848F6906FC750ECA /* Practice.swift */; };
+		F04125A67628DF4D1B18CCDB /* TrainerHead.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 4CC10425E51A6A9CD0ABDD30 /* TrainerHead.usdz */; };
 		FA36EEE5570B4DF21AAA13D0 /* RecordedPractice.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9E7F84D68E581A39C10A6BD /* RecordedPractice.swift */; };
 		FAC3A658E3919DF2A75237ED /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 14558430A881B70C43F64605 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
@@ -30,8 +33,10 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		02431413B2A011B36352F529 /* BladeMotionPreview.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BladeMotionPreview.swift; sourceTree = "<group>"; };
 		14558430A881B70C43F64605 /* Assets.xcassets */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		2E078C8B59BD3CB811BD60A4 /* TablePlacement.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TablePlacement.swift; sourceTree = "<group>"; };
+		4CC10425E51A6A9CD0ABDD30 /* TrainerHead.usdz */ = {isa = PBXFileReference; includeInIndex = 1; path = TrainerHead.usdz; sourceTree = "<group>"; };
 		6E6DBA798808C7BEA38A1149 /* TabletopTrainer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TabletopTrainer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7E9F2B4899832751DA250095 /* TrainerWorkflowTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TrainerWorkflowTests.swift; sourceTree = "<group>"; };
 		80EBF4655768DD5CD5CD505E /* TrainerApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TrainerApp.swift; sourceTree = "<group>"; };
@@ -39,6 +44,7 @@
 		B2CBF00C84A071AE5023C566 /* TrainerWorkflowTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TrainerWorkflowTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B9E7F84D68E581A39C10A6BD /* RecordedPractice.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RecordedPractice.swift; sourceTree = "<group>"; };
 		C08C7099848F6906FC750ECA /* Practice.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Practice.swift; sourceTree = "<group>"; };
+		C3A87686C743088163823A70 /* BladeRegistration.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BladeRegistration.swift; sourceTree = "<group>"; };
 		CD42F49547CCA8257F63D9FB /* FirebaseCoach.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FirebaseCoach.swift; sourceTree = "<group>"; };
 		F7A9D03EF387C45153A13620 /* AirwayFrame.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AirwayFrame.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -89,6 +95,7 @@
 				2E078C8B59BD3CB811BD60A4 /* TablePlacement.swift */,
 				80EBF4655768DD5CD5CD505E /* TrainerApp.swift */,
 				14558430A881B70C43F64605 /* Assets.xcassets */,
+				02431413B2A011B36352F529 /* BladeMotionPreview.swift */,
 			);
 			name = App;
 			path = App;
@@ -102,10 +109,20 @@
 			name = iOS;
 			sourceTree = "<group>";
 		};
+		A3ED6254CB898151FD6BEB18 /* Artwork */ = {
+			isa = PBXGroup;
+			children = (
+				4CC10425E51A6A9CD0ABDD30 /* TrainerHead.usdz */,
+			);
+			name = Artwork;
+			path = Artwork;
+			sourceTree = "<group>";
+		};
 		DDFC4F62A012617286196311 /* Core */ = {
 			isa = PBXGroup;
 			children = (
 				C08C7099848F6906FC750ECA /* Practice.swift */,
+				C3A87686C743088163823A70 /* BladeRegistration.swift */,
 			);
 			name = Core;
 			path = Core;
@@ -119,6 +136,7 @@
 				461B343F12E7442D7DF4F58D /* App */,
 				DDFC4F62A012617286196311 /* Core */,
 				FDAC330A858A208050145B50 /* UITests */,
+				A3ED6254CB898151FD6BEB18 /* Artwork */,
 			);
 			sourceTree = "<group>";
 		};
@@ -212,6 +230,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				FAC3A658E3919DF2A75237ED /* Assets.xcassets in Resources */,
+				F04125A67628DF4D1B18CCDB /* TrainerHead.usdz in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -228,6 +247,8 @@
 				32A9728A68B2798A42960F62 /* TablePlacement.swift in Sources */,
 				7AC4A068DF665D8499F9F6BE /* TrainerApp.swift in Sources */,
 				7CDF30330374CF3FE78D86EF /* Practice.swift in Sources */,
+				1C3B75DDAB55F05D0A9A220C /* BladeMotionPreview.swift in Sources */,
+				57C3DE6D9C307D47F5D448CC /* BladeRegistration.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

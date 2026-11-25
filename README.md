@@ -2,9 +2,9 @@
 
 A standalone training prototype. The goal is to place a virtual mannequin on a table and use a physical IntuBlade to practice finding, losing, and recovering the simulated view.
 
-Open `TabletopTrainer.xcodeproj`, choose the **TabletopTrainer** scheme, and run it on an iOS 26+ simulator. Select **Try recorded practice**, scrub the synthetic motion, and mark the first and recovered frames. Answer the two landmark questions and estimate visible glottic length on each frame. The app reveals the two answers together and saves the two most recent completed reps locally. Use **Explore** to see the fixture labels before an unaided rep.
+Open `TabletopTrainer.xcodeproj`, choose the **TabletopTrainer** scheme, and run it on an iOS 26+ simulator. Select **Try recorded practice**, play the synthetic sequence, and mark the first and recovered frames. Answer the two landmark questions and estimate visible glottic length on each frame. The app reveals the two answers together and saves the two most recent completed reps locally. Use **Explore** to see the fixture labels before an unaided rep.
 
-**Place head on table** uses an iPhone camera and ARKit. The current 3D model is a placement stand-in. Working clearance, target geometry, blade tracking and the anatomical reference require separate evidence. The home-screen photograph was generated for this project and depicts a generic training scene.
+**Place head on table** uses an iPhone camera and ARKit. The 3D model has an original generated face texture on a shaped shell. After placement, select **Preview blade movement** to watch a virtual camera travel through a schematic airway. The camera follows a programmed position and rotation. Working clearance, target geometry, blade tracking and the anatomical reference require separate evidence. The home-screen photograph was generated for this project and depicts a generic training scene.
 
 Run `swift test` from this directory for recovery and scoring checks. Run the **TabletopTrainer** scheme's tests on an iPhone simulator for the end-to-end recorded exercise. View [development notes](BUILD-LOG.md) for the verified milestones.
 

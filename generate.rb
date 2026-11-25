@@ -14,6 +14,9 @@ checks.add_dependency(app)
   app.add_resources([group.new_file('Assets.xcassets')]) if folder == 'App'
 end
 
+art = project.main_group.new_group('Artwork', 'Artwork')
+app.add_resources([art.new_file('TrainerHead.usdz')])
+
 group = project.main_group.new_group('UITests', 'UITests')
 Dir['UITests/*.swift'].sort.each { |file| checks.add_file_references([group.new_file(File.basename(file))]) }
 

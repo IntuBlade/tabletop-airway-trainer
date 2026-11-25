@@ -6,6 +6,8 @@ struct TablePlacement: View {
     @State private var placed = false
     @State private var reset = 0
 
+    @State private var assetFailed = false
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             #if targetEnvironment(simulator)
@@ -16,9 +18,9 @@ struct TablePlacement: View {
             )
             #else
             if ARWorldTrackingConfiguration.isSupported {
-                PlacementCamera(placed: $placed, reset: reset)
+                PlacementCamera(placed: $placed, assetFailed: $assetFailed, reset: reset)
                     .accessibilityLabel("Table placement camera")
-                Text(placed ? "Setup model placed" : "Aim at the table, then tap where the head should rest.")
+                Text(assetFailed ? "Head could not load. Reopen table placement to retry." : placed ? "Head placed" : "Move the phone slowly over the table, then tap to place the head.")
                     .font(.headline)
                 Text("Placement preview. Blade-controlled movement and scoring require calibrated tracking.")
                     .foregroundStyle(.secondary)
@@ -32,6 +34,10 @@ struct TablePlacement: View {
                 ContentUnavailableView("Table placement unavailable", systemImage: "arkit")
             }
             #endif
+            if placed || !ARWorldTrackingConfiguration.isSupported {
+                NavigationLink("Preview blade movement") { BladeMotionPreview() }
+                    .buttonStyle(.borderedProminent).tint(trainerActionFill)
+            }
         }
         .padding(16)
         .navigationTitle("Place head on table")
@@ -41,9 +47,10 @@ struct TablePlacement: View {
 
 private struct PlacementCamera: UIViewRepresentable {
     @Binding var placed: Bool
+    @Binding var assetFailed: Bool
     let reset: Int
 
-    func makeCoordinator() -> Coordinator { Coordinator(placed: $placed) }
+    func makeCoordinator() -> Coordinator { Coordinator(placed: $placed, failed: $assetFailed) }
 
     func makeUIView(context: Context) -> ARView {
         let view = ARView(frame: .zero, cameraMode: .ar, automaticallyConfigureSession: false)
@@ -71,7 +78,9 @@ private struct PlacementCamera: UIViewRepresentable {
         @Binding var placed: Bool
         var reset = 0
 
-        init(placed: Binding<Bool>) {
+        @Binding var failed: Bool
+        init(placed: Binding<Bool>, failed: Binding<Bool>) {
+            _failed = failed
             _placed = placed
         }
 
@@ -81,34 +90,17 @@ private struct PlacementCamera: UIViewRepresentable {
                 return
             }
             let anchor = AnchorEntity(world: hit.worldTransform)
-            anchor.addChild(Self.trainingHead())
+            guard let url = Bundle.main.url(forResource: "TrainerHead", withExtension: "usdz"),
+                  let head = try? Entity.load(contentsOf: url) else { failed = true; return }
+            let base = ModelEntity(mesh: .generateBox(size: [0.196, 0.017, 0.274], cornerRadius: 0.008),
+                                   materials: [SimpleMaterial(color: .darkGray, roughness: 0.92, isMetallic: false)])
+            base.position.y = 0.0085
+            anchor.addChild(base)
+            head.position.y = 0.012
+            anchor.addChild(head)
             view.scene.addAnchor(anchor)
             placed = true
         }
 
-        private static func trainingHead() -> Entity {
-            let model = Entity()
-            let shell = SimpleMaterial(color: UIColor(red: 0.77, green: 0.63, blue: 0.52, alpha: 1), roughness: 0.8, isMetallic: false)
-            let mouth = SimpleMaterial(color: UIColor(red: 0.23, green: 0.08, blue: 0.09, alpha: 1), roughness: 1, isMetallic: false)
-
-            let skull = ModelEntity(mesh: .generateSphere(radius: 1), materials: [shell])
-            skull.scale = [0.083, 0.073, 0.104]
-            skull.position = [0, 0.077, -0.031]
-
-            let jaw = ModelEntity(mesh: .generateSphere(radius: 1), materials: [shell])
-            jaw.scale = [0.062, 0.050, 0.055]
-            jaw.position = [0, 0.067, 0.066]
-
-            let mouthLocation = ModelEntity(mesh: .generateSphere(radius: 1), materials: [mouth])
-            mouthLocation.scale = [0.030, 0.006, 0.021]
-            mouthLocation.position = [0, 0.115, 0.068]
-
-            let nose = ModelEntity(mesh: .generateSphere(radius: 1), materials: [shell])
-            nose.scale = [0.016, 0.017, 0.022]
-            nose.position = [0, 0.146, 0.017]
-
-            for part in [skull, jaw, mouthLocation, nose] { model.addChild(part) }
-            return model
-        }
     }
 }

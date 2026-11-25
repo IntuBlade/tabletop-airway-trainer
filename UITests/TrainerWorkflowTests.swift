@@ -8,7 +8,8 @@ final class TrainerWorkflowTests: XCTestCase {
         let mark = app.buttons["Mark view"]
         XCTAssertTrue(mark.waitForExistence(timeout: 5))
         mark.tap()
-        app.sliders["blade-position"].adjust(toNormalizedSliderPosition: 0.9)
+        app.buttons["Play example"].tap()
+        XCTAssertTrue(app.buttons["Play example"].waitForExistence(timeout: 15))
         mark.tap()
 
         answer(in: app)

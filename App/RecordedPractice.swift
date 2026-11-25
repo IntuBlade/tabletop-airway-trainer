@@ -6,6 +6,7 @@ struct RecordedPractice: View {
     let save: (CompletedRep) -> Void
     @State private var stage = Stage.capture
     @State private var position = 0.0
+    @State private var playing = false
     @State private var first: Int?
     @State private var second: Int?
     @State private var answers = [StillAnswer(), StillAnswer()]
@@ -34,10 +35,19 @@ struct RecordedPractice: View {
         .toolbar {
             if stage == .capture && first == nil {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Explore") { showingExplore = true }
+                    Button("Explore") { playing = false; showingExplore = true }
                 }
             }
         }
+        .task(id: playing) {
+            guard playing else { return }
+            while position < Double(path.frames.count - 1) {
+                do { try await Task.sleep(for: .milliseconds(100)) } catch { return }
+                position += 1
+            }
+            playing = false
+        }
+        .onDisappear { playing = false }
         .sheet(isPresented: $showingExplore) { ExplorePractice() }
     }
 
@@ -45,20 +55,25 @@ struct RecordedPractice: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 Text(first == nil ? "Find the opening" : "Lose the view, then recover it").font(.title2.bold())
-                Text("Recorded movement · Synthetic training fixture")
+                Text("Play the example and mark the opening twice: when you first see it and when it returns.")
                     .font(.subheadline).foregroundStyle(.secondary)
 
                 AirwayFrame(frame: path.frames[index])
-                Slider(value: $position, in: 0...Double(path.frames.count - 1), step: 1) {
-                    Text("Recorded blade position")
-                }.accessibilityIdentifier("blade-position")
-                Text(path.frames[index].time.formatted(.number.precision(.fractionLength(1))) + " s")
-                    .font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+                HStack {
+                    Button(playing ? "Pause example" : "Play example") {
+                        if position >= Double(path.frames.count - 1) { reset() }
+                        playing.toggle()
+                    }.buttonStyle(.bordered)
+                    Spacer()
+                    Text(path.frames[index].time.formatted(.number.precision(.fractionLength(1))) + " / 8 s")
+                        .font(.caption.monospacedDigit())
+                }
 
                 Button("Mark view") {
                     if first == nil {
                         first = index
                     } else {
+                        playing = false
                         second = index
                         stage = .first
                     }
@@ -89,6 +104,7 @@ struct RecordedPractice: View {
     }
 
     private func reset() {
+        playing = false
         stage = .capture
         position = 0
         first = nil
