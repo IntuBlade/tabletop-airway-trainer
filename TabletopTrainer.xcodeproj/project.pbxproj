@@ -1,0 +1,472 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0BB7284E5887CA820FC19BD0 /* FirebaseCoach.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD42F49547CCA8257F63D9FB /* FirebaseCoach.swift */; };
+		0EA971062B249511BF2CBCFC /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 892058C57C9826FCF4CD1AE7 /* Foundation.framework */; };
+		16908C901171C39404E04DE1 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 892058C57C9826FCF4CD1AE7 /* Foundation.framework */; };
+		32A9728A68B2798A42960F62 /* TablePlacement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E078C8B59BD3CB811BD60A4 /* TablePlacement.swift */; };
+		4DCC6EA44E63483C45A7A97C /* TrainerWorkflowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E9F2B4899832751DA250095 /* TrainerWorkflowTests.swift */; };
+		53E6B9802230939305332DA5 /* AirwayFrame.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7A9D03EF387C45153A13620 /* AirwayFrame.swift */; };
+		7AC4A068DF665D8499F9F6BE /* TrainerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80EBF4655768DD5CD5CD505E /* TrainerApp.swift */; };
+		7CDF30330374CF3FE78D86EF /* Practice.swift in Sources */ = {isa = PBXBuildFile; fileRef = C08C7099848F6906FC750ECA /* Practice.swift */; };
+		FA36EEE5570B4DF21AAA13D0 /* RecordedPractice.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9E7F84D68E581A39C10A6BD /* RecordedPractice.swift */; };
+		FAC3A658E3919DF2A75237ED /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 14558430A881B70C43F64605 /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		CDC7D68134C5FA52F52662A6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D75DD07997784938070CA65B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 014D42EE50515140E2037990;
+			remoteInfo = TabletopTrainer;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		14558430A881B70C43F64605 /* Assets.xcassets */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		2E078C8B59BD3CB811BD60A4 /* TablePlacement.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TablePlacement.swift; sourceTree = "<group>"; };
+		6E6DBA798808C7BEA38A1149 /* TabletopTrainer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TabletopTrainer.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		7E9F2B4899832751DA250095 /* TrainerWorkflowTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TrainerWorkflowTests.swift; sourceTree = "<group>"; };
+		80EBF4655768DD5CD5CD505E /* TrainerApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TrainerApp.swift; sourceTree = "<group>"; };
+		892058C57C9826FCF4CD1AE7 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
+		B2CBF00C84A071AE5023C566 /* TrainerWorkflowTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TrainerWorkflowTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		B9E7F84D68E581A39C10A6BD /* RecordedPractice.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RecordedPractice.swift; sourceTree = "<group>"; };
+		C08C7099848F6906FC750ECA /* Practice.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Practice.swift; sourceTree = "<group>"; };
+		CD42F49547CCA8257F63D9FB /* FirebaseCoach.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FirebaseCoach.swift; sourceTree = "<group>"; };
+		F7A9D03EF387C45153A13620 /* AirwayFrame.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AirwayFrame.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		0F0240CFBF264973ABBF6B74 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				16908C901171C39404E04DE1 /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		823F5C661C7A98FF5CDAED04 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0EA971062B249511BF2CBCFC /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		042B6CDE78B3F9CF670E8EA7 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				6E6DBA798808C7BEA38A1149 /* TabletopTrainer.app */,
+				B2CBF00C84A071AE5023C566 /* TrainerWorkflowTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		2E55DD847428A63EEAD96E63 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				4C3ED46A87F721D8D8589451 /* iOS */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		461B343F12E7442D7DF4F58D /* App */ = {
+			isa = PBXGroup;
+			children = (
+				F7A9D03EF387C45153A13620 /* AirwayFrame.swift */,
+				CD42F49547CCA8257F63D9FB /* FirebaseCoach.swift */,
+				B9E7F84D68E581A39C10A6BD /* RecordedPractice.swift */,
+				2E078C8B59BD3CB811BD60A4 /* TablePlacement.swift */,
+				80EBF4655768DD5CD5CD505E /* TrainerApp.swift */,
+				14558430A881B70C43F64605 /* Assets.xcassets */,
+			);
+			name = App;
+			path = App;
+			sourceTree = "<group>";
+		};
+		4C3ED46A87F721D8D8589451 /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				892058C57C9826FCF4CD1AE7 /* Foundation.framework */,
+			);
+			name = iOS;
+			sourceTree = "<group>";
+		};
+		DDFC4F62A012617286196311 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				C08C7099848F6906FC750ECA /* Practice.swift */,
+			);
+			name = Core;
+			path = Core;
+			sourceTree = "<group>";
+		};
+		E91305DA21841FD49395C47A = {
+			isa = PBXGroup;
+			children = (
+				042B6CDE78B3F9CF670E8EA7 /* Products */,
+				2E55DD847428A63EEAD96E63 /* Frameworks */,
+				461B343F12E7442D7DF4F58D /* App */,
+				DDFC4F62A012617286196311 /* Core */,
+				FDAC330A858A208050145B50 /* UITests */,
+			);
+			sourceTree = "<group>";
+		};
+		FDAC330A858A208050145B50 /* UITests */ = {
+			isa = PBXGroup;
+			children = (
+				7E9F2B4899832751DA250095 /* TrainerWorkflowTests.swift */,
+			);
+			name = UITests;
+			path = UITests;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		014D42EE50515140E2037990 /* TabletopTrainer */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CA7D9F2397CDFE3736BC2415 /* Build configuration list for PBXNativeTarget "TabletopTrainer" */;
+			buildPhases = (
+				D471B58D39806F5B504C7F5C /* Sources */,
+				0F0240CFBF264973ABBF6B74 /* Frameworks */,
+				BEC3F8DC72B6890A0E8F7E8B /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = TabletopTrainer;
+			productName = TabletopTrainer;
+			productReference = 6E6DBA798808C7BEA38A1149 /* TabletopTrainer.app */;
+			productType = "com.apple.product-type.application";
+		};
+		DDF8B0A4996EC73F48429FFD /* TrainerWorkflowTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1468759CF25F68A2328AD733 /* Build configuration list for PBXNativeTarget "TrainerWorkflowTests" */;
+			buildPhases = (
+				E74ED942D2928E3D348C4D6C /* Sources */,
+				823F5C661C7A98FF5CDAED04 /* Frameworks */,
+				1CB2A701E191BD5AB89FCB98 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				DDB1B4E64E4B1E8BA3694845 /* PBXTargetDependency */,
+			);
+			name = TrainerWorkflowTests;
+			productName = TrainerWorkflowTests;
+			productReference = B2CBF00C84A071AE5023C566 /* TrainerWorkflowTests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		D75DD07997784938070CA65B /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 1600;
+			};
+			buildConfigurationList = 66E47361F03ACD4CB63EC0BD /* Build configuration list for PBXProject "TabletopTrainer" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = E91305DA21841FD49395C47A;
+			minimizedProjectReferenceProxies = 0;
+			preferredProjectObjectVersion = 100;
+			productRefGroup = 042B6CDE78B3F9CF670E8EA7 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				014D42EE50515140E2037990 /* TabletopTrainer */,
+				DDF8B0A4996EC73F48429FFD /* TrainerWorkflowTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		1CB2A701E191BD5AB89FCB98 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BEC3F8DC72B6890A0E8F7E8B /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FAC3A658E3919DF2A75237ED /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		D471B58D39806F5B504C7F5C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				53E6B9802230939305332DA5 /* AirwayFrame.swift in Sources */,
+				0BB7284E5887CA820FC19BD0 /* FirebaseCoach.swift in Sources */,
+				FA36EEE5570B4DF21AAA13D0 /* RecordedPractice.swift in Sources */,
+				32A9728A68B2798A42960F62 /* TablePlacement.swift in Sources */,
+				7AC4A068DF665D8499F9F6BE /* TrainerApp.swift in Sources */,
+				7CDF30330374CF3FE78D86EF /* Practice.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E74ED942D2928E3D348C4D6C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4DCC6EA44E63483C45A7A97C /* TrainerWorkflowTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		DDB1B4E64E4B1E8BA3694845 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = TabletopTrainer;
+			target = 014D42EE50515140E2037990 /* TabletopTrainer */;
+			targetProxy = CDC7D68134C5FA52F52662A6 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		50BAD02DE6AE00AA6D429814 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = "";
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = "";
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Airway Practice";
+				INFOPLIST_KEY_FirebaseAppCheckTokenAutoRefreshEnabled = NO;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Place the virtual training head on the table.";
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.intublade.tabletoptrainer;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		5C92FF7D8DF8E1FD290FB611 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.intublade.tabletoptrainer.workflow;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_TARGET_NAME = TabletopTrainer;
+			};
+			name = Debug;
+		};
+		6C866B636CFAA366D5D7F9EE /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		7C3F6163F25232E283D821CA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		945FAA4E976EE3E3EFE0D2F5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.intublade.tabletoptrainer.workflow;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_TARGET_NAME = TabletopTrainer;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		B18AE424F59E8A41431B8F64 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = "";
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = "";
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Airway Practice";
+				INFOPLIST_KEY_FirebaseAppCheckTokenAutoRefreshEnabled = NO;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Place the virtual training head on the table.";
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.intublade.tabletoptrainer;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1468759CF25F68A2328AD733 /* Build configuration list for PBXNativeTarget "TrainerWorkflowTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				945FAA4E976EE3E3EFE0D2F5 /* Release */,
+				5C92FF7D8DF8E1FD290FB611 /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		66E47361F03ACD4CB63EC0BD /* Build configuration list for PBXProject "TabletopTrainer" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7C3F6163F25232E283D821CA /* Debug */,
+				6C866B636CFAA366D5D7F9EE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CA7D9F2397CDFE3736BC2415 /* Build configuration list for PBXNativeTarget "TabletopTrainer" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B18AE424F59E8A41431B8F64 /* Release */,
+				50BAD02DE6AE00AA6D429814 /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = D75DD07997784938070CA65B /* Project object */;
+}
