@@ -1,8 +1,10 @@
 import SwiftUI
 
+let trainerActionFill = Color(red: 0, green: 0.36, blue: 0.34)
+
 let trainerTint = Color(uiColor: UIColor { traits in
     traits.userInterfaceStyle == .dark
-        ? UIColor(red: 0.09, green: 0.48, blue: 0.46, alpha: 1)
+        ? UIColor(red: 0.34, green: 0.83, blue: 0.78, alpha: 1)
         : UIColor(red: 0.00, green: 0.36, blue: 0.34, alpha: 1)
 })
 
@@ -40,7 +42,7 @@ private struct TrainerHome: View {
                         } label: {
                             Label("Place head on table", systemImage: "arkit")
                                 .frame(maxWidth: .infinity, minHeight: 44)
-                        }.buttonStyle(.borderedProminent)
+                        }.buttonStyle(.borderedProminent).tint(trainerActionFill)
                         NavigationLink {
                             RecordedPractice { rep in
                                 if let data = try? JSONEncoder().encode(Array(([rep] + history).prefix(2))) {

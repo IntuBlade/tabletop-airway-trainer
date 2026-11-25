@@ -63,7 +63,7 @@ struct RecordedPractice: View {
                         stage = .first
                     }
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.borderedProminent).tint(trainerActionFill)
                 .controlSize(.large)
                 .disabled(first.map { index <= $0 } ?? false)
 
@@ -160,7 +160,7 @@ private struct FrameQuestions: View {
                     ForEach(Opening.allCases, id: \.self) { Text($0.band).tag(Optional($0)) }
                 }.frame(minHeight: 44)
                 Button(button, action: next)
-                    .buttonStyle(.borderedProminent).controlSize(.large)
+                    .buttonStyle(.borderedProminent).tint(trainerActionFill).controlSize(.large)
                     .disabled(!answer.complete)
             }.padding(20).frame(maxWidth: 620).frame(maxWidth: .infinity)
         }
@@ -217,7 +217,7 @@ struct PracticeReview: View {
                         "On your next rep, make the loss of view clear before you mark the return.")
                 if FirebaseCoach.isConfigured { coachControls }
                 if let retry {
-                    Button("Try another rep", action: retry).buttonStyle(.borderedProminent).controlSize(.large)
+                    Button("Try another rep", action: retry).buttonStyle(.borderedProminent).tint(trainerActionFill).controlSize(.large)
                 }
             }.padding(20).frame(maxWidth: 620).frame(maxWidth: .infinity)
         }

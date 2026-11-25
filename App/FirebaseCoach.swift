@@ -68,7 +68,7 @@ struct CoachResult {
             if response.rawResponse.modelVersion == "apple-foundation-models-system-language-model" {
                 route = .onDevice
             } else {
-                guard allowCloud, response.rawResponse.modelVersion?.hasPrefix("gemini-") == true else { return nil }
+                guard allowCloud, response.rawResponse.modelVersion.hasPrefix("gemini-") else { return nil }
                 route = .cloud
             }
             return CoachResult(text: text, route: route)
