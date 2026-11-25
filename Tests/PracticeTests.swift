@@ -119,3 +119,22 @@ extension BladeRegistrationTests {
         XCTAssertEqual(filter.update(pose, at: 0.09)?.columns.3.x, 0.01)
     }
 }
+
+extension MarkerDetectorTests {
+    func testCornerSpikeDuringWithdrawalAndMarkerLoss() throws {
+        var sequence = MarkerSequence()
+        func corners(_ z: Double) -> [SIMD2<Double>] {
+            [SIMD2(-1,-1), [1,-1], [1,1], [-1,1]].map { $0 * (0.02 / z) }
+        }
+        for i in 0..<3 { _ = sequence.pose(corners(0.12), at: Double(i)/30) }
+        let spike = try XCTUnwrap(sequence.pose(corners(0.22), at: 0.1))
+        XCTAssertEqual(abs(spike.columns.3.z), 0.12, accuracy: 0.001)
+        for i in 4..<12 {
+            let z = 0.12 + Double(i-3)*0.003
+            let pose = try XCTUnwrap(sequence.pose(corners(z), at: Double(i)/30))
+            XCTAssertEqual(Double(abs(pose.columns.3.z)), z-0.003, accuracy: 0.004)
+        }
+        XCTAssertNil(sequence.pose(nil, at: 0.4))
+        XCTAssertNil(sequence.pose(corners(0.18), at: 0.45))
+    }
+}

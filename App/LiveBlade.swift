@@ -20,6 +20,7 @@ final class TrainerBlade: NSObject, CameraDelegate, @unchecked Sendable {
     private var latestImage: UIImage?
     private var lastFrame = -Double.infinity
     private var lastPose: simd_float4x4?
+    private var sequence = MarkerSequence()
     private var filter = BladePoseFilter()
     private var poseTime = -Double.infinity
     private var started = false
@@ -59,6 +60,7 @@ final class TrainerBlade: NSObject, CameraDelegate, @unchecked Sendable {
         lock.withLock {
             active = enabled
             generation += 1
+            sequence = MarkerSequence()
             filter = BladePoseFilter()
             lastPose = nil
             latestImage = nil
@@ -87,10 +89,11 @@ final class TrainerBlade: NSObject, CameraDelegate, @unchecked Sendable {
         guard let ticket else { return }
         worker.async {
             let cg = image.cgImage ?? image.ciImage.flatMap { self.imageContext.createCGImage($0, from: $0.extent) }
-            let pose = cg.flatMap { try? TrainerMarker.pose(in: $0) }
+            let corners = cg.flatMap { try? TrainerMarker.corners(in: $0) }
             self.lock.withLock {
                 self.busy = false
                 guard self.generation == ticket else { return }
+                let pose = self.sequence.pose(corners, at: now)
                 self.lastPose = self.filter.update(pose, at: now)
                 self.poseTime = now
             }
@@ -117,7 +120,7 @@ final class TrainerBlade: NSObject, CameraDelegate, @unchecked Sendable {
     func receiveDeviceConflicted(_ conflicted: Bool) { if conflicted { invalidate(); setConnection("Blade in use by another app") } }
 
     private func invalidate() {
-        lock.withLock { generation += 1; filter = BladePoseFilter(); lastPose = nil; latestImage = nil; lastFrame = -.infinity }
+        lock.withLock { generation += 1; sequence = MarkerSequence(); filter = BladePoseFilter(); lastPose = nil; latestImage = nil; lastFrame = -.infinity }
     }
 }
 
@@ -130,29 +133,38 @@ struct LiveBladeMotion: View {
         TimelineView(.animation(minimumInterval: 1.0 / 30, paused: phase != .active)) { _ in
             let sample = TrainerBlade.shared.snapshot()
             VStack(alignment: .leading, spacing: 16) {
-                if let registration = station ?? reference, let pose = registration.mouthFromCamera(referenceFromCamera: sample.pose) {
-                    SyntheticAirwayCamera(mouthFromCamera: pose, useResearchScene: true).aspectRatio(3/4, contentMode: .fit)
-                } else if let image = sample.image {
-                    Image(uiImage: image)
-                        .resizable()
-                        .scaledToFit()
-                        .accessibilityLabel("Live blade video")
-                        .overlay(alignment: .bottomLeading) {
-                            Text(sample.pose == nil ? "Live blade · Aim at the trainer QR" : "Live blade · Marker found")
-                                .font(.caption.bold()).padding(8)
-                                .foregroundStyle(.white).background(.black.opacity(0.75))
+                let registration = station ?? reference
+                let pose = registration?.mouthFromCamera(referenceFromCamera: sample.pose)
+                ZStack {
+                    if registration != nil {
+                        SyntheticAirwayCamera(mouthFromCamera: pose ?? matrix_identity_float4x4, useResearchScene: true)
+                            .opacity(pose == nil ? 0 : 1)
+                            .accessibilityHidden(pose == nil)
+                    }
+                    if pose == nil {
+                        if let image = sample.image {
+                            Image(uiImage: image)
+                                .resizable()
+                                .scaledToFit()
+                                .accessibilityLabel("Live blade video")
+                                .overlay(alignment: .bottomLeading) {
+                                    Text(sample.pose == nil ? "Live blade · Aim at the trainer QR" : "Live blade · Marker found")
+                                        .font(.caption.bold()).padding(8)
+                                        .foregroundStyle(.white).background(.black.opacity(0.75))
+                                }
+                                .onAppear { NSLog("Trainer preview: presenting live blade frames") }
+                        } else {
+                            ContentUnavailableView(sample.connection, systemImage: "viewfinder",
+                                description: Text("Live video appears here as soon as a blade image arrives."))
                         }
-                        .onAppear { NSLog("Trainer preview: presenting live blade frames") }
-                } else {
-                    ContentUnavailableView(sample.connection, systemImage: "viewfinder",
-                        description: Text("Live video appears here as soon as a blade image arrives."))
-                }
+                    }
+                }.aspectRatio(3/4, contentMode: .fit)
                 Text(station == nil ? "Relative motion preview · Recording off" : "Registered tabletop preview · Recording off").font(.headline)
                 if station == nil {
-                Text("Set the starting view, then move or turn the blade while keeping the code visible. Distance and table placement are uncalibrated.")
-                Button(reference == nil ? "Set starting view" : "Reset starting view") {
-                    if let origin = TrainerBlade.shared.snapshot().pose { reference = BladeRegistration(referenceFromMouth: origin) }
-                }.disabled(sample.pose == nil).buttonStyle(.borderedProminent)
+                    Text("Set the starting view, then move or turn the blade while keeping the code visible. Distance and table placement are uncalibrated.")
+                    Button(reference == nil ? "Set starting view" : "Reset starting view") {
+                        if let origin = TrainerBlade.shared.snapshot().pose { reference = BladeRegistration(referenceFromMouth: origin) }
+                    }.disabled(sample.pose == nil).buttonStyle(.borderedProminent)
                 } else {
                     Text("Keep the reference stationary. This research alignment uses estimated blade optics.")
                 }
