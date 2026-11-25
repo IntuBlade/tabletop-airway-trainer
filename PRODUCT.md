@@ -16,4 +16,4 @@ Place a virtual mannequin on the table, guide the real blade into its virtual mo
 
 ## Capabilities and Constraints
 
-The standalone SwiftUI app uses the phone camera to place the mannequin. Live practice will use the blade camera to track relative to a physical reference registered to the virtual head. The preview and tracking checks have separate evidence. Practice data must stay local unless the learner explicitly requests cloud coaching.
+The standalone trainer uses the blade camera for placement and practice. The phone displays the blade video and the virtual airway. The tabletop reference establishes the plane where the learner places the head. The preview and tracking checks have separate evidence. Practice data must stay local unless the learner explicitly requests cloud coaching.

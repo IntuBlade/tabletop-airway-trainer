@@ -138,3 +138,16 @@ extension MarkerDetectorTests {
         XCTAssertNil(sequence.pose(corners(0.18), at: 0.45))
     }
 }
+
+extension BladeRegistrationTests {
+    func testBladeCrosshairPlacesHeadOnMarkerPlane() throws {
+        var lens = simd_float4x4(simd_quatf(angle: .pi, axis: [1,0,0]))
+        lens.columns.3 = [0.07, -0.02, -0.2, 1]
+        let placement = try XCTUnwrap(BladeTablePlacement(markerFromLens: lens))
+        XCTAssertLessThan(simd_length(placement.markerFromHead.columns.3 - SIMD4(0.07,-0.02,0,1)), 0.00001)
+        XCTAssertEqual(placement.markerFromHead.columns.1.z, -1, accuracy: 0.00001)
+        var away = matrix_identity_float4x4
+        away.columns.3 = lens.columns.3
+        XCTAssertNil(BladeTablePlacement(markerFromLens: away))
+    }
+}

@@ -55,3 +55,7 @@ The staging trainer connected to the blade, but its aiming screen only displayed
 The operator registered the head and observed airway movement on centered entry and withdrawal. The model shook substantially and depth was hard to judge while backing out. This was a partial result. Depth accuracy and repeatable recovery remain unverified.
 
 The next staging build filters QR corner observations across three frames before estimating pose, tightens the allowed geometric error as the marker shrinks, and keeps the airway scene loaded across tracking loss. It shows live blade video while reacquiring. A synthetic withdrawal test covers an isolated depth spike, continued motion, and loss. Ten core tests passed; the signed update installed and launched on the physical iPhone. Its effect on hand-held shake still needs an operator check. The carton test remains on hold.
+
+### Place the mannequin through the blade camera
+
+The operator reported that phone-camera placement did not match the intended device workflow. The blade-enabled build now uses a flat QR as the tabletop reference, intersects the blade crosshair with that plane, and displays the head over the live blade image. The airway view uses that same placement. Revised the mouth texture to remove the protruding incisors and checked the rendered model. Eleven core tests passed, including ray-to-plane placement and rejection of a camera pointing away. The signed build launched on the physical phone; blade-only placement and withdrawal accuracy await operator verification.

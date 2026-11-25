@@ -1,4 +1,5 @@
 import SwiftUI
+import SceneKit
 import Vision
 import QuartzCore
 import CoreImage
@@ -127,53 +128,100 @@ final class TrainerBlade: NSObject, CameraDelegate, @unchecked Sendable {
 struct LiveBladeMotion: View {
     var station: BladeRegistration? = nil
     @Environment(\.scenePhase) private var phase
-    @State private var reference: BladeRegistration?
+    @State private var placement: BladeTablePlacement?
+    @State private var practicing = false
 
     var body: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 30, paused: phase != .active)) { _ in
             let sample = TrainerBlade.shared.snapshot()
-            VStack(alignment: .leading, spacing: 16) {
-                let registration = station ?? reference
-                let pose = registration?.mouthFromCamera(referenceFromCamera: sample.pose)
-                ZStack {
-                    if registration != nil {
-                        SyntheticAirwayCamera(mouthFromCamera: pose ?? matrix_identity_float4x4, useResearchScene: true)
-                            .opacity(pose == nil ? 0 : 1)
-                            .accessibilityHidden(pose == nil)
-                    }
-                    if pose == nil {
-                        if let image = sample.image {
-                            Image(uiImage: image)
-                                .resizable()
-                                .scaledToFit()
-                                .accessibilityLabel("Live blade video")
-                                .overlay(alignment: .bottomLeading) {
-                                    Text(sample.pose == nil ? "Live blade · Aim at the trainer QR" : "Live blade · Marker found")
-                                        .font(.caption.bold()).padding(8)
-                                        .foregroundStyle(.white).background(.black.opacity(0.75))
-                                }
-                                .onAppear { NSLog("Trainer preview: presenting live blade frames") }
-                        } else {
-                            ContentUnavailableView(sample.connection, systemImage: "viewfinder",
-                                description: Text("Live video appears here as soon as a blade image arrives."))
+            let registered = station ?? placement?.station
+            let inRep = practicing || station != nil
+            let camera = registered?.mouthFromCamera(referenceFromCamera: sample.pose)
+            let candidate = sample.pose.flatMap { BladeTablePlacement(markerFromLens: $0) }
+            ScrollView {
+                VStack(alignment: .leading, spacing: 14) {
+                    ZStack {
+                        if inRep {
+                            SyntheticAirwayCamera(mouthFromCamera: camera ?? matrix_identity_float4x4, useResearchScene: true)
+                                .opacity(camera == nil ? 0 : 1)
+                        }
+                        if !inRep || camera == nil {
+                            if let image = sample.image {
+                                Image(uiImage: image).resizable().scaledToFit()
+                                    .accessibilityLabel("Live blade video")
+                                    .overlay {
+                                        if !inRep, let placement {
+                                            BladeHeadOverlay(base: placement.markerFromHead, camera: sample.pose)
+                                                .opacity(sample.pose == nil ? 0 : 1)
+                                        } else if !inRep {
+                                            Image(systemName: "plus").foregroundStyle(.white)
+                                                .shadow(color: .black, radius: 2)
+                                        }
+                                    }
+                            } else {
+                                ContentUnavailableView(sample.connection, systemImage: "viewfinder")
+                            }
                         }
                     }
-                }.aspectRatio(3/4, contentMode: .fit)
-                Text(station == nil ? "Relative motion preview · Recording off" : "Registered tabletop preview · Recording off").font(.headline)
-                if station == nil {
-                    Text("Set the starting view, then move or turn the blade while keeping the code visible. Distance and table placement are uncalibrated.")
-                    Button(reference == nil ? "Set starting view" : "Reset starting view") {
-                        if let origin = TrainerBlade.shared.snapshot().pose { reference = BladeRegistration(referenceFromMouth: origin) }
-                    }.disabled(sample.pose == nil).buttonStyle(.borderedProminent)
-                } else {
-                    Text("Keep the reference stationary. This research alignment uses estimated blade optics.")
-                }
-            }.padding()
+                    .aspectRatio(sample.image.map { $0.size.width / max(1, $0.size.height) } ?? 4/3, contentMode: .fit)
+                    Text(inRep ? "Blade view" : "Blade camera setup").font(.headline)
+                    if inRep {
+                        Text(camera == nil ? "Bring the whole QR back into the blade view." : "Move through the placed mouth. Recording is off.")
+                    } else if placement == nil {
+                        Text("Lay the trainer QR flat with its black square 40 mm wide. Keep the code in the blade view and aim the crosshair where the head should rest.")
+                        Button("Place head here") {
+                            placement = TrainerBlade.shared.snapshot().pose.flatMap { BladeTablePlacement(markerFromLens: $0) }
+                        }.disabled(candidate == nil).buttonStyle(.borderedProminent)
+                    } else {
+                        Text(sample.pose == nil ? "Find the QR again to see the placed head." : "The head is fixed to the table reference. Keep the QR still.")
+                        Button("Enter airway view") { practicing = true }
+                            .disabled(sample.pose == nil).buttonStyle(.borderedProminent)
+                    }
+                    if station == nil && placement != nil {
+                        Button("Place again") { practicing = false; placement = nil }
+                    }
+                }.padding()
+            }
         }
-        .navigationTitle("Live blade motion")
+        .navigationTitle("Blade practice").navigationBarTitleDisplayMode(.inline)
         .onAppear { TrainerBlade.shared.enable(phase == .active) }
-        .onChange(of: phase) { _, p in reference = nil; TrainerBlade.shared.enable(p == .active) }
+        .onChange(of: phase) { _, p in TrainerBlade.shared.enable(p == .active) }
         .onDisappear { TrainerBlade.shared.enable(false) }
+    }
+}
+
+private struct BladeHeadOverlay: UIViewRepresentable {
+    let base: simd_float4x4
+    let camera: simd_float4x4?
+
+    func makeUIView(context: Context) -> SCNView {
+        let view = SCNView()
+        view.isOpaque = false
+        view.backgroundColor = .clear
+        let scene = SCNScene()
+        if let url = Bundle.main.url(forResource: "TrainerHead", withExtension: "usdz"),
+           let head = SCNReferenceNode(url: url) {
+            head.load()
+            var surface = base
+            surface.columns.3 += base.columns.1 * 0.012
+            head.simdTransform = surface
+            scene.rootNode.addChildNode(head)
+        }
+        let lens = SCNNode()
+        lens.camera = SCNCamera()
+        lens.camera?.projectionDirection = .horizontal
+        lens.camera?.fieldOfView = 68
+        lens.camera?.zNear = 0.001
+        scene.rootNode.addChildNode(lens)
+        view.scene = scene
+        view.autoenablesDefaultLighting = true
+        view.pointOfView = lens
+        view.isUserInteractionEnabled = false
+        return view
+    }
+
+    func updateUIView(_ view: SCNView, context: Context) {
+        if let camera { view.pointOfView?.simdTransform = camera }
     }
 }
 #endif

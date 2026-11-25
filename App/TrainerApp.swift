@@ -37,22 +37,17 @@ private struct TrainerHome: View {
 
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Find the view. Get it back.").font(.title2.bold())
-                        Text("Place a virtual training head on a table or try the recorded exercise on this iPhone.")
+                        Text("Use the blade camera to place the head and practice, or play the recorded exercise.")
                             .foregroundStyle(.secondary)
                     }
 
                     VStack(spacing: 12) {
                         #if canImport(BaseCamera)
                         NavigationLink { LiveBladeMotion() } label: {
-                            Label("Live blade motion", systemImage: "viewfinder").frame(maxWidth: .infinity, minHeight: 44)
-                        }.buttonStyle(.borderedProminent).tint(trainerActionFill)
-                        #endif
-                        NavigationLink {
-                            TablePlacement()
-                        } label: {
-                            Label("Place head on table", systemImage: "arkit")
+                            Label("Place head with blade", systemImage: "viewfinder")
                                 .frame(maxWidth: .infinity, minHeight: 44)
                         }.buttonStyle(.borderedProminent).tint(trainerActionFill)
+                        #endif
                         NavigationLink {
                             RecordedPractice { rep in
                                 if let data = try? JSONEncoder().encode(Array(([rep] + history).prefix(2))) {

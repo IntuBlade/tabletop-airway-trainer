@@ -4,7 +4,7 @@ A standalone training prototype. The goal is to place a virtual mannequin on a t
 
 Open `TabletopTrainer.xcodeproj`, choose the **TabletopTrainer** scheme, and run it on an iOS 26+ simulator. Select **Try recorded practice**, play the synthetic sequence, and mark the first and recovered frames. Answer the two landmark questions and estimate visible glottic length on each frame. The app reveals the two answers together and saves the two most recent completed reps locally. Use **Explore** to see the fixture labels before an unaided rep.
 
-**Place head on table** uses an iPhone camera and ARKit. The 3D model has an original generated face texture on a shaped shell. After placement, select **Preview blade movement** to watch a virtual camera travel through a schematic airway. The camera follows a programmed position and rotation. Working clearance, target geometry, blade tracking and the anatomical reference require separate evidence. The home-screen photograph was generated for this project and depicts a generic training scene.
+The blade-enabled build uses the blade video for tabletop placement and practice. The head is a shaped shell with an original generated face texture.
 
 Run `swift test` from this directory for recovery and scoring checks. Run the **TabletopTrainer** scheme's tests on an iPhone simulator for the end-to-end recorded exercise. View [development notes](BUILD-LOG.md) for the verified milestones.
 
@@ -21,10 +21,6 @@ Coach compilation and real provider verification are tracked independently. Use 
 
 With access to the licensed device frameworks, set `TRAINER_BLADE_SDK` to their local directory and run `ruby generate.rb`. Build the generated **TabletopTrainerBlade** project for the phone. The SDK requires versioned app metadata. The generated project contains local paths and is excluded from source control.
 
-Open [the trainer QR](Artwork/motion-marker.png) on a second screen. Connect the blade and choose **Live blade motion**. Aim at the QR until **Marker found** appears, then tap **Set starting view**. Turn or move the blade with the QR visible. Covering it or disconnecting the blade should clear the view. This screen processes frames in memory. A nominal 40 mm code and assumed optics support relative motion only. Screen zoom affects scale. Setting a starting view does not register the virtual mouth to the tabletop.
+Lay [the trainer QR](Artwork/motion-marker.png) flat on the table with its black square 40 mm wide. Choose **Place head with blade**. Keep the full QR visible, aim the blade crosshair at the desired spot, and tap **Place head here**. Verify the head appears in the blade video, then tap **Enter airway view**. The screen returns to live blade video when it loses the marker. Keep the reference stationary through setup and practice.
 
 The optional local build input `TRAINER_RESEARCH_SCENE` accepts an authorized, meter-scale USDZ named `PrivateAirway.usdz` in camera-local coordinates. It is used in the live-motion screen. The default renderer uses schematic geometry.
-
-## Place the head relative to a reference
-
-Open **Place head on table**. Display the trainer QR at a measured black-square width of 40 mm on a stationary surface next to the practice area. Keep it visible to the phone camera while tapping the detected tabletop. **Mouth registered** means the app has stored the head and QR in a shared coordinate system. Moving the reference requires a new placement. **Use blade at placed mouth** uses that saved registration; this path requires SDK approval for the standalone app identity. Lip alignment is a model estimate, and the blade optics still need measurement.

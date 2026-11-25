@@ -100,3 +100,26 @@ struct BladePoseFilter {
         return smoothed
     }
 }
+
+struct BladeTablePlacement {
+    let markerFromHead: simd_float4x4
+    let station: BladeRegistration
+
+    /// QR lies flat: marker +x is right on the print and +z points into the table.
+    /// Intersect the blade's optical axis with the tabletop at the reticle.
+    init?(markerFromLens: simd_float4x4) {
+        guard BladeRegistration.isRigid(markerFromLens) else { return nil }
+        let position = markerFromLens.columns.3.xyz
+        let forward = -markerFromLens.columns.2.xyz
+        guard position.z < 0, forward.z > 0.1 else { return nil }
+        let distance = -position.z / forward.z
+        guard distance > 0, distance < 1 else { return nil }
+        let hit = position + distance * forward
+        var base = simd_float4x4(simd_quatf(angle: -.pi / 2, axis: [1,0,0]))
+        base.columns.3 = SIMD4(hit, 1)
+        markerFromHead = base
+        // TableStation expects the image-anchor convention used in its registration math.
+        let markerFromImage = simd_float4x4(simd_quatf(angle: -.pi / 2, axis: [1,0,0]))
+        station = TableStation.registration(worldFromImage: markerFromImage, worldFromHeadBase: base)
+    }
+}
