@@ -67,13 +67,14 @@ enum SquarePose {
 }
 
 enum TableStation {
+    static let lipsOnHead = SIMD3<Float>(0, 0.135, 0.059)
+
     static func registration(worldFromImage: simd_float4x4, worldFromHeadBase: simd_float4x4) -> BladeRegistration {
         // AR image local +z runs down the print. The pose solver uses +y down.
         let imageFromMarker = simd_float4x4(simd_quatf(angle: .pi / 2, axis: [1, 0, 0]))
         let worldFromMarker = worldFromImage * imageFromMarker
         // Nominal entry point on the setup shell, and corresponding lip midpoint
         // in the research renderer. These are model-space landmarks in meters.
-        let lipsOnHead = SIMD3<Float>(0, 0.135, 0.059)
         let lipsInScene = SIMD3<Float>(0, 0.077, 0.026)
         let orientation = simd_quatf(angle: .pi, axis: SIMD3<Float>(0, 1, 0))
         var headFromScene = simd_float4x4(orientation)
@@ -105,21 +106,18 @@ struct BladeTablePlacement {
     let markerFromHead: simd_float4x4
     let station: BladeRegistration
 
-    /// QR lies flat: marker +x is right on the print and +z points into the table.
-    /// Intersect the blade's optical axis with the tabletop at the reticle.
-    init?(markerFromLens: simd_float4x4) {
-        guard BladeRegistration.isRigid(markerFromLens) else { return nil }
-        let position = markerFromLens.columns.3.xyz
-        let forward = -markerFromLens.columns.2.xyz
-        guard position.z < 0, forward.z > 0.1 else { return nil }
-        let distance = -position.z / forward.z
-        guard distance > 0, distance < 1 else { return nil }
-        let hit = position + distance * forward
-        var base = simd_float4x4(simd_quatf(angle: -.pi / 2, axis: [1,0,0]))
-        base.columns.3 = SIMD4(hit, 1)
-        markerFromHead = base
-        // TableStation expects the image-anchor convention used in its registration math.
+    /// The print defines placement. Aiming or turning the blade only moves the camera.
+    init() {
         let markerFromImage = simd_float4x4(simd_quatf(angle: -.pi / 2, axis: [1,0,0]))
+        var base = markerFromImage
+        base.columns.3.y = -TableStation.lipsOnHead.z
+        markerFromHead = base
         station = TableStation.registration(worldFromImage: markerFromImage, worldFromHeadBase: base)
+    }
+
+    func mouthInFrame(markerFromLens: simd_float4x4, aspect: Float) -> Bool {
+        let point = markerFromLens.inverse * markerFromHead * SIMD4(TableStation.lipsOnHead, 1)
+        let halfWidth = -point.z * Float(TrainerMarker.halfWidthAtUnitDepth)
+        return point.z < -0.001 && abs(point.x) < halfWidth && abs(point.y) * aspect < halfWidth
     }
 }

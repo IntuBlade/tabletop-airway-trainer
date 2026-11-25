@@ -140,14 +140,28 @@ extension MarkerDetectorTests {
 }
 
 extension BladeRegistrationTests {
-    func testBladeCrosshairPlacesHeadOnMarkerPlane() throws {
+    func testNearlySquareDetectionKeepsRaisedMouthOverCenteredQR() throws {
+        // Asymmetry observed by Vision on a 109-pixel-wide synthetic overhead QR.
+        let corners: [SIMD2<Double>] = [[-0.05854,-0.05854],[0.05835,-0.05835],
+                                        [0.05696,0.05696],[-0.05835,0.05835]]
+        let lens = try XCTUnwrap(TrainerMarker.solve(corners))
+        let mouth = lens.inverse * SIMD4<Float>(0,0,-0.135,1)
+        XCTAssertLessThan(simd_length(SIMD2(mouth.x,mouth.y) / mouth.z), 0.002)
+    }
+
+    func testFlatQRLocatesMouthInSetupAndPractice() throws {
+        let placement = BladeTablePlacement()
+        let lip = placement.markerFromHead * SIMD4(TableStation.lipsOnHead, 1)
+        XCTAssertLessThan(simd_length(lip - SIMD4(0,0,-0.135,1)), 0.00001)
+        let practiceLip = placement.station.referenceFromMouth * SIMD4<Float>(0,0.077,0.026,1)
+        XCTAssertLessThan(simd_length(lip - practiceLip), 0.00001)
+
         var lens = simd_float4x4(simd_quatf(angle: .pi, axis: [1,0,0]))
-        lens.columns.3 = [0.07, -0.02, -0.2, 1]
-        let placement = try XCTUnwrap(BladeTablePlacement(markerFromLens: lens))
-        XCTAssertLessThan(simd_length(placement.markerFromHead.columns.3 - SIMD4(0.07,-0.02,0,1)), 0.00001)
-        XCTAssertEqual(placement.markerFromHead.columns.1.z, -1, accuracy: 0.00001)
-        var away = matrix_identity_float4x4
-        away.columns.3 = lens.columns.3
-        XCTAssertNil(BladeTablePlacement(markerFromLens: away))
+        lens.columns.3 = [0,0,-0.35,1]
+        XCTAssertTrue(placement.mouthInFrame(markerFromLens: lens, aspect: 4/3))
+        lens.columns.3.x = 0.25
+        XCTAssertFalse(placement.mouthInFrame(markerFromLens: lens, aspect: 4/3))
+        lens.columns.3 = [0,0,-0.08,1]
+        XCTAssertFalse(placement.mouthInFrame(markerFromLens: lens, aspect: 4/3))
     }
 }

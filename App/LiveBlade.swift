@@ -11,6 +11,16 @@ import WDLogger
 
 
 #if canImport(BaseCamera)
+struct BladeFrame {
+    let image: UIImage
+    let corners: [SIMD2<Double>]?
+    let setupPose: simd_float4x4?
+    let practicePose: simd_float4x4?
+    let captured: Double
+
+    var aspect: CGFloat { image.size.width / image.size.height }
+}
+
 final class TrainerBlade: NSObject, CameraDelegate, @unchecked Sendable {
     static let shared = TrainerBlade()
     private let lock = NSLock()
@@ -18,12 +28,9 @@ final class TrainerBlade: NSObject, CameraDelegate, @unchecked Sendable {
     private var active = false
     private var busy = false
     private var generation = 0
-    private var latestImage: UIImage?
-    private var lastFrame = -Double.infinity
-    private var lastPose: simd_float4x4?
+    private var frame: BladeFrame?
     private var sequence = MarkerSequence()
     private var filter = BladePoseFilter()
-    private var poseTime = -Double.infinity
     private var started = false
     private let imageContext = CIContext()
     private var connection = "Waiting for blade connection"
@@ -63,16 +70,14 @@ final class TrainerBlade: NSObject, CameraDelegate, @unchecked Sendable {
             generation += 1
             sequence = MarkerSequence()
             filter = BladePoseFilter()
-            lastPose = nil
-            latestImage = nil
-            lastFrame = -.infinity
+            frame = nil
         }
     }
 
-    func snapshot() -> (image: UIImage?, pose: simd_float4x4?, connection: String) {
+    func snapshot() -> (frame: BladeFrame?, connection: String) {
         lock.withLock {
-            let now = CACurrentMediaTime()
-            return (now - lastFrame < 0.6 ? latestImage : nil, now - poseTime < 0.4 ? lastPose : nil, connection)
+            let fresh = frame.flatMap { CACurrentMediaTime() - $0.captured < 0.4 ? $0 : nil }
+            return (fresh, connection)
         }
     }
 
@@ -80,10 +85,7 @@ final class TrainerBlade: NSObject, CameraDelegate, @unchecked Sendable {
         guard let image else { return }
         let now = CACurrentMediaTime()
         let ticket: Int? = lock.withLock {
-            guard active else { return nil }
-            latestImage = image
-            lastFrame = now
-            guard !busy else { return nil }
+            guard active, !busy else { return nil }
             busy = true
             return generation
         }
@@ -91,12 +93,16 @@ final class TrainerBlade: NSObject, CameraDelegate, @unchecked Sendable {
         worker.async {
             let cg = image.cgImage ?? image.ciImage.flatMap { self.imageContext.createCGImage($0, from: $0.extent) }
             let corners = cg.flatMap { try? TrainerMarker.corners(in: $0) }
+            let setupPose = corners.flatMap(TrainerMarker.solve)
             self.lock.withLock {
                 self.busy = false
                 guard self.generation == ticket else { return }
                 let pose = self.sequence.pose(corners, at: now)
-                self.lastPose = self.filter.update(pose, at: now)
-                self.poseTime = now
+                let practicePose = self.filter.update(pose, at: now)
+                self.frame = cg.map {
+                    BladeFrame(image: UIImage(cgImage: $0), corners: corners, setupPose: setupPose,
+                               practicePose: practicePose, captured: now)
+                }
             }
         }
     }
@@ -121,64 +127,59 @@ final class TrainerBlade: NSObject, CameraDelegate, @unchecked Sendable {
     func receiveDeviceConflicted(_ conflicted: Bool) { if conflicted { invalidate(); setConnection("Blade in use by another app") } }
 
     private func invalidate() {
-        lock.withLock { generation += 1; sequence = MarkerSequence(); filter = BladePoseFilter(); lastPose = nil; latestImage = nil; lastFrame = -.infinity }
+        lock.withLock { generation += 1; sequence = MarkerSequence(); filter = BladePoseFilter(); frame = nil }
     }
 }
 
 struct LiveBladeMotion: View {
     var station: BladeRegistration? = nil
     @Environment(\.scenePhase) private var phase
-    @State private var placement: BladeTablePlacement?
+    private let placement = BladeTablePlacement()
     @State private var practicing = false
 
     var body: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 30, paused: phase != .active)) { _ in
             let sample = TrainerBlade.shared.snapshot()
-            let registered = station ?? placement?.station
+            let frame = sample.frame
             let inRep = practicing || station != nil
-            let camera = registered?.mouthFromCamera(referenceFromCamera: sample.pose)
-            let candidate = sample.pose.flatMap { BladeTablePlacement(markerFromLens: $0) }
+            let camera = (station ?? placement.station).mouthFromCamera(referenceFromCamera: frame?.practicePose)
+            let mouthVisible = frame.flatMap { frame in
+                frame.setupPose.map { placement.mouthInFrame(markerFromLens: $0, aspect: Float(frame.aspect)) }
+            } ?? false
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
-                    ZStack {
-                        if inRep {
-                            SyntheticAirwayCamera(mouthFromCamera: camera ?? matrix_identity_float4x4, useResearchScene: true)
-                                .opacity(camera == nil ? 0 : 1)
-                        }
-                        if !inRep || camera == nil {
-                            if let image = sample.image {
-                                Image(uiImage: image).resizable().scaledToFit()
-                                    .accessibilityLabel("Live blade video")
-                                    .overlay {
-                                        if !inRep, let placement {
-                                            BladeHeadOverlay(base: placement.markerFromHead, camera: sample.pose)
-                                                .opacity(sample.pose == nil ? 0 : 1)
-                                        } else if !inRep {
-                                            Image(systemName: "plus").foregroundStyle(.white)
-                                                .shadow(color: .black, radius: 2)
+                    Color.black
+                        .aspectRatio(frame?.aspect ?? 4/3, contentMode: .fit)
+                        .overlay {
+                            if inRep, let camera {
+                                SyntheticAirwayCamera(mouthFromCamera: camera, useResearchScene: true)
+                            } else if let frame {
+                                ZStack {
+                                    Image(uiImage: frame.image).resizable()
+                                        .accessibilityLabel("Live blade video")
+                                    if !inRep {
+                                        BladeHeadOverlay(base: placement.markerFromHead, camera: frame.setupPose)
+                                            .opacity(frame.setupPose == nil ? 0 : 1)
+                                        if let corners = frame.corners {
+                                            MarkerOutline(corners: corners)
                                         }
                                     }
+                                }
                             } else {
-                                ContentUnavailableView(sample.connection, systemImage: "viewfinder")
+                                Text(sample.connection).foregroundStyle(.white)
                             }
                         }
-                    }
-                    .aspectRatio(sample.image.map { $0.size.width / max(1, $0.size.height) } ?? 4/3, contentMode: .fit)
-                    Text(inRep ? "Blade view" : "Blade camera setup").font(.headline)
+                        .clipped()
+                    Text(inRep ? "Blade view" : "Place head with blade").font(.headline)
                     if inRep {
                         Text(camera == nil ? "Bring the whole QR back into the blade view." : "Move through the placed mouth. Recording is off.")
-                    } else if placement == nil {
-                        Text("Lay the trainer QR flat with its black square 40 mm wide. Keep the code in the blade view and aim the crosshair where the head should rest.")
-                        Button("Place head here") {
-                            placement = TrainerBlade.shared.snapshot().pose.flatMap { BladeTablePlacement(markerFromLens: $0) }
-                        }.disabled(candidate == nil).buttonStyle(.borderedProminent)
+                        if station == nil {
+                            Button("Return to setup") { practicing = false }
+                        }
                     } else {
-                        Text(sample.pose == nil ? "Find the QR again to see the placed head." : "The head is fixed to the table reference. Keep the QR still.")
+                        Text(setupHint(frame, mouthVisible: mouthVisible))
                         Button("Enter airway view") { practicing = true }
-                            .disabled(sample.pose == nil).buttonStyle(.borderedProminent)
-                    }
-                    if station == nil && placement != nil {
-                        Button("Place again") { practicing = false; placement = nil }
+                            .disabled(!mouthVisible || camera == nil).buttonStyle(.borderedProminent)
                     }
                 }.padding()
             }
@@ -187,6 +188,32 @@ struct LiveBladeMotion: View {
         .onAppear { TrainerBlade.shared.enable(phase == .active) }
         .onChange(of: phase) { _, p in TrainerBlade.shared.enable(p == .active) }
         .onDisappear { TrainerBlade.shared.enable(false) }
+    }
+
+    private func setupHint(_ frame: BladeFrame?, mouthVisible: Bool) -> String {
+        guard let frame else { return "Connect the blade to see its camera view." }
+        guard frame.corners != nil else { return "Lay the trainer QR flat. Aim the blade at the whole code, including its white border, until an outline appears. The black square should measure 40 mm." }
+        guard frame.setupPose != nil else { return "QR found. Face it more squarely so the blade can place the head." }
+        guard mouthVisible else { return "QR found. Pull the blade back and look down at the code until the mouth comes into view." }
+        return "The mouth sits above the center of the outlined QR. Keep the paper still as you move the blade."
+    }
+}
+
+private struct MarkerOutline: View {
+    let corners: [SIMD2<Double>]
+
+    var body: some View {
+        Canvas { context, size in
+            let focal = size.width / (2 * TrainerMarker.halfWidthAtUnitDepth)
+            let points = corners.map { CGPoint(x: size.width / 2 + $0.x * focal,
+                                                y: size.height / 2 + $0.y * focal) }
+            var path = Path()
+            path.addLines(points)
+            path.closeSubpath()
+            context.stroke(path, with: .color(.black), lineWidth: 4)
+            context.stroke(path, with: .color(.mint), lineWidth: 2)
+        }
+        .accessibilityHidden(true)
     }
 }
 
@@ -200,8 +227,8 @@ private struct BladeHeadOverlay: UIViewRepresentable {
         view.backgroundColor = .clear
         let scene = SCNScene()
         if let url = Bundle.main.url(forResource: "TrainerHead", withExtension: "usdz"),
-           let head = SCNReferenceNode(url: url) {
-            head.load()
+           let asset = try? SCNScene(url: url, options: nil) {
+            let head = asset.rootNode.clone()
             var surface = base
             surface.columns.3 += base.columns.1 * 0.012
             head.simdTransform = surface
@@ -210,7 +237,7 @@ private struct BladeHeadOverlay: UIViewRepresentable {
         let lens = SCNNode()
         lens.camera = SCNCamera()
         lens.camera?.projectionDirection = .horizontal
-        lens.camera?.fieldOfView = 68
+        lens.camera?.fieldOfView = TrainerMarker.horizontalFOV
         lens.camera?.zNear = 0.001
         scene.rootNode.addChildNode(lens)
         view.scene = scene

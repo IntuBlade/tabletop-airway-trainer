@@ -1,6 +1,8 @@
 import Vision
 
 enum TrainerMarker {
+    static let horizontalFOV = 68.0
+    static let halfWidthAtUnitDepth = tan(horizontalFOV * .pi / 360)
     static let payload = "intublade-trainer-motion-v1"
 
     static func pose(in image: CGImage) throws -> simd_float4x4? {
@@ -11,8 +13,35 @@ enum TrainerMarker {
         guard corners.count == 4 else { return nil }
         let shortest = (0..<4).map { simd_distance(corners[$0], corners[($0+1)%4]) }.min() ?? 0
         // Limit residual relative to marker size as it shrinks during withdrawal.
-        return SquarePose.referenceFromCamera(corners: corners, sideMeters: 0.04,
-                                              maxNormalizedError: min(0.025, shortest * 0.08))
+        guard let measured = SquarePose.referenceFromCamera(corners: corners, sideMeters: 0.04,
+                                                            maxNormalizedError: min(0.025, shortest * 0.08)) else { return nil }
+        // A tiny perspective error on a square viewed head-on can create a large
+        // spurious tilt. Fit a rotated square to all four corners. Prefer its
+        // frontal pose only to the extent that it explains the observations.
+        let center = corners.reduce(.zero, +) / 4
+        let right = (corners[1] - corners[0] + corners[2] - corners[3]) / 2
+        let down = (corners[3] - corners[0] + corners[2] - corners[1]) / 2
+        let edge = (right + SIMD2(down.y, -down.x)) / 2
+        let width = simd_length(edge)
+        guard width > 0 else { return nil }
+        let ortho = SIMD2(-edge.y, edge.x)
+        let signs: [SIMD2<Double>] = [[-1,-1],[1,-1],[1,1],[-1,1]]
+        let error = zip(signs, corners).map { sign, actual in
+            simd_distance(center + (edge * sign.x + ortho * sign.y) / 2, actual)
+        }.max()! / width
+        // Blend over 1–3% of a side so gradual tilting has no discrete pose jump.
+        let weight = Float(min(1, max(0, (error - 0.01) / 0.02)))
+        if weight == 1 { return measured }
+        let direction = SIMD2<Float>(edge / width)
+        let depth = Float(0.04 / width)
+        let frontal = simd_float4x4(columns: (
+            [direction.x, -direction.y, 0, 0], [-direction.y, -direction.x, 0, 0],
+            [0, 0, -1, 0], [Float(center.x)*depth, -Float(center.y)*depth, -depth, 1]
+        ))
+        let tilted = measured.inverse
+        var fitted = simd_float4x4(simd_slerp(simd_quatf(frontal), simd_quatf(tilted), weight))
+        fitted.columns.3 = frontal.columns.3 + weight * (tilted.columns.3 - frontal.columns.3)
+        return fitted.inverse
     }
 
     static func corners(in image: CGImage) throws -> [SIMD2<Double>]? {
@@ -23,7 +52,7 @@ enum TrainerMarker {
         guard matches.count == 1, let qr = matches.first else { return nil }
         // Nominal optics and marker size for an explicitly uncalibrated motion preview.
         let w = Double(image.width), h = Double(image.height)
-        let focal = w / (2 * tan(68 * Double.pi / 360))
+        let focal = w / (2 * halfWidthAtUnitDepth)
         let corners = [qr.topLeft, qr.topRight, qr.bottomRight, qr.bottomLeft].map {
             SIMD2<Double>(($0.x - 0.5) * w / focal, (0.5 - $0.y) * h / focal)
         }

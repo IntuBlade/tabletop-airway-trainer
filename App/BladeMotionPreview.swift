@@ -90,7 +90,8 @@ struct SyntheticAirwayCamera: UIViewRepresentable {
         camera.camera = SCNCamera()
         camera.camera?.zNear = 0.001
         camera.camera?.zFar = 1
-        camera.camera?.fieldOfView = 68
+        if useResearchScene { camera.camera?.projectionDirection = .horizontal }
+        camera.camera?.fieldOfView = TrainerMarker.horizontalFOV
         camera.light = SCNLight()
         camera.light?.type = .omni
         camera.light?.intensity = 700
