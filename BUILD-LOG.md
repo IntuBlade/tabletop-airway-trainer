@@ -41,3 +41,7 @@ The research iPhone reported one attached accessory. The SDK began connecting, t
 Integrated the motion detector and airway renderer into the recording-free POGO preview that already has accessory access. The research iPhone reported an attached accessory and the app received live blade frames. Ten seconds later the on-phone detector acquired the trainer marker from that stream and set the starting pose. The preview displays the raw image until it acquires the screen marker, then switches to the virtual camera. Carton visibility and physical table registration remain separate checks.
 
 Andrew confirmed on the physical iPhone that the live blade image switched to the airway and the view moved as he moved the blade. This verifies relative blade motion using the screen marker.
+
+### Registered tabletop setup in Airway Practice
+
+Installed and launched the standalone trainer with QR-referenced head placement and a registered virtual camera path. The camera pose now supports time-based smoothing of position and orientation. Missing measurements clear the filter, and reacquisition starts fresh. Nine tests passed, including coordinate-frame invariance and jitter/dropout behavior. Live movement at the placed mouth and the perceptual effect of smoothing still need physical verification after accessory access is provisioned for the trainer.

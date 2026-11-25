@@ -19,6 +19,7 @@ final class TrainerBlade: NSObject, CameraDelegate, @unchecked Sendable {
     private var generation = 0
     private var lastFrame = -Double.infinity
     private var lastPose: simd_float4x4?
+    private var filter = BladePoseFilter()
     private var poseTime = -Double.infinity
     private var started = false
     private let imageContext = CIContext()
@@ -57,6 +58,7 @@ final class TrainerBlade: NSObject, CameraDelegate, @unchecked Sendable {
         lock.withLock {
             active = enabled
             generation += 1
+            filter = BladePoseFilter()
             lastPose = nil
             lastFrame = -.infinity
         }
@@ -86,7 +88,7 @@ final class TrainerBlade: NSObject, CameraDelegate, @unchecked Sendable {
             self.lock.withLock {
                 self.busy = false
                 guard self.generation == ticket else { return }
-                self.lastPose = pose
+                self.lastPose = self.filter.update(pose, at: now)
                 self.poseTime = now
             }
         }
@@ -112,11 +114,12 @@ final class TrainerBlade: NSObject, CameraDelegate, @unchecked Sendable {
     func receiveDeviceConflicted(_ conflicted: Bool) { if conflicted { invalidate(); setConnection("Blade in use by another app") } }
 
     private func invalidate() {
-        lock.withLock { generation += 1; lastPose = nil; lastFrame = -.infinity }
+        lock.withLock { generation += 1; filter = BladePoseFilter(); lastPose = nil; lastFrame = -.infinity }
     }
 }
 
 struct LiveBladeMotion: View {
+    var station: BladeRegistration? = nil
     @Environment(\.scenePhase) private var phase
     @State private var reference: BladeRegistration?
 
@@ -124,18 +127,22 @@ struct LiveBladeMotion: View {
         TimelineView(.periodic(from: .now, by: 0.08)) { _ in
             let sample = TrainerBlade.shared.snapshot()
             VStack(alignment: .leading, spacing: 16) {
-                if let reference, let pose = reference.mouthFromCamera(referenceFromCamera: sample.pose) {
+                if let registration = station ?? reference, let pose = registration.mouthFromCamera(referenceFromCamera: sample.pose) {
                     SyntheticAirwayCamera(mouthFromCamera: pose, useResearchScene: true).aspectRatio(3/4, contentMode: .fit)
                 } else {
                     ContentUnavailableView(sample.hasFrames ? (sample.pose == nil ? "Looking for trainer marker" : "Marker found") : sample.connection,
                                            systemImage: "viewfinder",
                                            description: Text(sample.hasFrames ? "Aim at the trainer QR on a second screen." : "The marker detector starts when the SDK delivers a blade image."))
                 }
-                Text("Relative motion preview · Recording off").font(.headline)
+                Text(station == nil ? "Relative motion preview · Recording off" : "Registered tabletop preview · Recording off").font(.headline)
+                if station == nil {
                 Text("Set the starting view, then move or turn the blade while keeping the code visible. Distance and table placement are uncalibrated.")
                 Button(reference == nil ? "Set starting view" : "Reset starting view") {
                     if let origin = TrainerBlade.shared.snapshot().pose { reference = BladeRegistration(referenceFromMouth: origin) }
                 }.disabled(sample.pose == nil).buttonStyle(.borderedProminent)
+                } else {
+                    Text("Keep the reference stationary. This research alignment uses estimated blade optics.")
+                }
             }.padding()
         }
         .navigationTitle("Live blade motion")

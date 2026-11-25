@@ -24,3 +24,7 @@ With access to the licensed device frameworks, set `TRAINER_BLADE_SDK` to their 
 Open [the trainer QR](Artwork/motion-marker.png) on a second screen. Connect the blade and choose **Live blade motion**. Aim at the QR until **Marker found** appears, then tap **Set starting view**. Turn or move the blade with the QR visible. Covering it or disconnecting the blade should clear the view. This screen processes frames in memory. A nominal 40 mm code and assumed optics support relative motion only. Screen zoom affects scale. Setting a starting view does not register the virtual mouth to the tabletop.
 
 The optional local build input `TRAINER_RESEARCH_SCENE` accepts an authorized, meter-scale USDZ named `PrivateAirway.usdz` in camera-local coordinates. It is used in the live-motion screen. The default renderer uses schematic geometry.
+
+## Place the head relative to a reference
+
+Open **Place head on table**. Display the trainer QR at a measured black-square width of 40 mm on a stationary surface next to the practice area. Keep it visible to the phone camera while tapping the detected tabletop. **Mouth registered** means the app has stored the head and QR in a shared coordinate system. Moving the reference requires a new placement. **Use blade at placed mouth** uses that saved registration; this path requires SDK approval for the standalone app identity. Lip alignment is a model estimate, and the blade optics still need measurement.

@@ -65,3 +65,38 @@ enum SquarePose {
         return cameraFromReference.inverse
     }
 }
+
+enum TableStation {
+    static func registration(worldFromImage: simd_float4x4, worldFromHeadBase: simd_float4x4) -> BladeRegistration {
+        // AR image local +z runs down the print. The pose solver uses +y down.
+        let imageFromMarker = simd_float4x4(simd_quatf(angle: .pi / 2, axis: [1, 0, 0]))
+        let worldFromMarker = worldFromImage * imageFromMarker
+        // Nominal entry point on the setup shell, and corresponding lip midpoint
+        // in the research renderer. These are model-space landmarks in meters.
+        let lipsOnHead = SIMD3<Float>(0, 0.135, 0.059)
+        let lipsInScene = SIMD3<Float>(0, 0.077, 0.026)
+        let orientation = simd_quatf(angle: .pi, axis: SIMD3<Float>(0, 1, 0))
+        var headFromScene = simd_float4x4(orientation)
+        headFromScene.columns.3 = SIMD4(lipsOnHead - orientation.act(lipsInScene), 1)
+        return BladeRegistration(referenceFromMouth: worldFromMarker.inverse * worldFromHeadBase * headFromScene)
+    }
+}
+
+struct BladePoseFilter {
+    private var previous: simd_float4x4?
+    private var time = -Double.infinity
+
+    mutating func update(_ sample: simd_float4x4?, at now: Double) -> simd_float4x4? {
+        defer { time = now }
+        guard let sample else { previous = nil; return nil }
+        let dt = now - time
+        guard let previous, dt > 0, dt < 0.20 else { previous = sample; return sample }
+        // 65 ms exponential smoothing, independent of detector frame rate.
+        let alpha = Float(1 - exp(-dt / 0.065))
+        let rotation = simd_slerp(simd_quatf(previous), simd_quatf(sample), alpha)
+        var smoothed = simd_float4x4(rotation)
+        smoothed.columns.3 = previous.columns.3 + alpha * (sample.columns.3 - previous.columns.3)
+        self.previous = smoothed
+        return smoothed
+    }
+}

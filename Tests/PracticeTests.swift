@@ -96,3 +96,26 @@ final class MarkerDetectorTests: XCTestCase {
         XCTAssertNil(try TrainerMarker.pose(in: frame(white)))
     }
 }
+
+extension BladeRegistrationTests {
+    func testTableRegistrationIndependentOfWorldOrigin() {
+        var world = simd_float4x4(simd_quatf(angle: 0.7, axis: [0,1,0]))
+        world.columns.3 = [0.2,0.4,0.8,1]
+        var head = matrix_identity_float4x4
+        head.columns.3.x = 0.18
+        let a = TableStation.registration(worldFromImage: matrix_identity_float4x4, worldFromHeadBase: head)
+        let b = TableStation.registration(worldFromImage: world, worldFromHeadBase: world * head)
+        for i in 0..<4 { XCTAssertLessThan(simd_length(a.referenceFromMouth[i]-b.referenceFromMouth[i]), 0.00001) }
+    }
+    func testFilterReducesJitterAndClearsImmediatelyOnLoss() throws {
+        var filter = BladePoseFilter()
+        var pose = matrix_identity_float4x4
+        _ = filter.update(pose, at: 0)
+        pose.columns.3.x = 0.01
+        let x = try XCTUnwrap(filter.update(pose, at: 0.03)).columns.3.x
+        XCTAssertGreaterThan(x, 0)
+        XCTAssertLessThan(x, 0.01)
+        XCTAssertNil(filter.update(nil, at: 0.06))
+        XCTAssertEqual(filter.update(pose, at: 0.09)?.columns.3.x, 0.01)
+    }
+}
