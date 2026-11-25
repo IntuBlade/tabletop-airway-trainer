@@ -9,6 +9,11 @@ let trainerTint = Color(uiColor: UIColor { traits in
 })
 
 @main struct TrainerApp: App {
+    init() {
+        #if canImport(BaseCamera)
+        TrainerBlade.shared.start()
+        #endif
+    }
     var body: some Scene { WindowGroup { TrainerHome() } }
 }
 
@@ -37,6 +42,11 @@ private struct TrainerHome: View {
                     }
 
                     VStack(spacing: 12) {
+                        #if canImport(BaseCamera)
+                        NavigationLink { LiveBladeMotion() } label: {
+                            Label("Live blade motion", systemImage: "viewfinder").frame(maxWidth: .infinity, minHeight: 44)
+                        }.buttonStyle(.borderedProminent).tint(trainerActionFill)
+                        #endif
                         NavigationLink {
                             TablePlacement()
                         } label: {

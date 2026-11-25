@@ -3,6 +3,7 @@ require 'xcodeproj'
 Dir.chdir(__dir__)
 firebase = ENV['TRAINER_FIREBASE'] == '1'
 name = firebase ? 'TabletopTrainerFirebase' : 'TabletopTrainer'
+name += 'Blade' if ENV['TRAINER_BLADE_SDK']
 project = Xcodeproj::Project.new("#{name}.xcodeproj")
 app = project.new_target(:application, 'TabletopTrainer', :ios, '26.0')
 checks = project.new_target(:ui_test_bundle, 'TrainerWorkflowTests', :ios, '26.0')
@@ -58,6 +59,35 @@ checks.build_configurations.each do |configuration|
     'TEST_TARGET_NAME' => app.name, 'SWIFT_VERSION' => '5.0', 'TARGETED_DEVICE_FAMILY' => '1'
   )
 end
+if ENV['TRAINER_BLADE_SDK']
+  if ENV['TRAINER_RESEARCH_SCENE']
+    scene = File.realpath(ENV.fetch('TRAINER_RESEARCH_SCENE'))
+    raise 'Expected PrivateAirway.usdz' unless File.basename(scene) == 'PrivateAirway.usdz'
+    app.add_resources([project.main_group.new_file(scene)])
+  end
+  sdk = File.realpath(ENV.fetch('TRAINER_BLADE_SDK'))
+  app.build_configurations.each do |cfg|
+    cfg.build_settings.merge!(
+      'FRAMEWORK_SEARCH_PATHS[sdk=iphoneos*]' => ['$(inherited)', sdk],
+      'OTHER_LDFLAGS[sdk=iphoneos*]' => '$(inherited) -framework BaseCamera -framework WDLogger -framework ZMFICamera',
+      'LD_RUNPATH_SEARCH_PATHS' => '$(inherited) @executable_path/Frameworks',
+      'INFOPLIST_FILE' => 'App/BladeInfo.plist',
+      'MARKETING_VERSION' => '0.2', 'CURRENT_PROJECT_VERSION' => '2',
+      'TRAINER_SDK_PATH' => sdk, 'ENABLE_USER_SCRIPT_SANDBOXING' => 'NO')
+  end
+  phase = app.new_shell_script_build_phase('Embed licensed blade frameworks')
+  phase.shell_script = <<~'SH'
+    set -eu
+    [ "$PLATFORM_NAME" = iphoneos ] || exit 0
+    destination="$TARGET_BUILD_DIR/$FRAMEWORKS_FOLDER_PATH"
+    mkdir -p "$destination"
+    for name in BaseCamera WDLogger ZMFICamera; do
+      rsync -a --exclude Headers --exclude PrivateHeaders --exclude Modules "$TRAINER_SDK_PATH/$name.framework" "$destination/"
+      codesign --force --sign "$EXPANDED_CODE_SIGN_IDENTITY" "$destination/$name.framework"
+    done
+  SH
+end
+
 project.save
 scheme = Xcodeproj::XCScheme.new
 scheme.add_build_target(app)

@@ -70,3 +70,29 @@ extension BladeRegistrationTests {
         XCTAssertNil(SquarePose.referenceFromCamera(corners: distorted, sideMeters: 0.05, maxNormalizedError: 1e-6))
     }
 }
+
+import CoreImage
+import ImageIO
+
+final class MarkerDetectorTests: XCTestCase {
+    func testPublishedMarkerMovesCameraAndLossClearsPose() throws {
+        let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("Artwork/motion-marker.png")
+        let source = try XCTUnwrap(CGImageSourceCreateWithURL(url as CFURL, nil))
+        let qr = CIImage(cgImage: try XCTUnwrap(CGImageSourceCreateImageAtIndex(source, 0, nil)))
+        let bounds = CGRect(x: 0, y: 0, width: qr.extent.width * 2, height: qr.extent.height)
+        let white = CIImage(color: .white).cropped(to: bounds)
+        let context = CIContext()
+        func frame(_ image: CIImage) throws -> CGImage {
+            try XCTUnwrap(context.createCGImage(image, from: bounds))
+        }
+        func pose(_ shift: Double) throws -> simd_float4x4 {
+            let shifted = qr.transformed(by: .init(translationX: shift, y: 0)).composited(over: white)
+            return try XCTUnwrap(TrainerMarker.pose(in: frame(shifted)))
+        }
+        let start = try pose(0)
+        let moved = try pose(100)
+        XCTAssertGreaterThan(abs(start.columns.3.x - moved.columns.3.x), 0.001)
+        XCTAssertNil(try TrainerMarker.pose(in: frame(white)))
+    }
+}

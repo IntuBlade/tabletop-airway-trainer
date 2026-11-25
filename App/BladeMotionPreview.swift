@@ -43,8 +43,9 @@ struct BladeMotionPreview: View {
     }
 }
 
-private struct SyntheticAirwayCamera: UIViewRepresentable {
+struct SyntheticAirwayCamera: UIViewRepresentable {
     let mouthFromCamera: simd_float4x4
+    var useResearchScene = false
 
     func makeUIView(context: Context) -> SCNView {
         let view = SCNView()
@@ -63,15 +64,28 @@ private struct SyntheticAirwayCamera: UIViewRepresentable {
             node.simdScale = scale
             scene.rootNode.addChildNode(node)
         }
-        let tissue = UIColor(red: 0.63, green: 0.30, blue: 0.29, alpha: 1)
-        let rim = UIColor(red: 0.84, green: 0.60, blue: 0.52, alpha: 1)
-        surface([0, 0, -0.16], [0.09, 0.07, 0.045], tissue)
-        for side: Float in [-1, 1] {
-            surface([side * 0.046, 0, -0.068], [0.020, 0.055, 0.062], tissue)
-            surface([side * 0.010, -0.004, -0.109], [0.005, 0.014, 0.009], rim)
+        if useResearchScene, let url = Bundle.main.url(forResource: "PrivateAirway", withExtension: "usdz"),
+           let model = try? SCNScene(url: url, options: nil) {
+            for node in model.rootNode.childNodes {
+                scene.rootNode.addChildNode(node)
+            }
+            scene.rootNode.enumerateChildNodes { node, _ in
+                for material in node.geometry?.materials ?? [] {
+                    material.isDoubleSided = true
+                    material.roughness.contents = 0.42
+                }
+            }
+        } else {
+            let tissue = UIColor(red: 0.63, green: 0.30, blue: 0.29, alpha: 1)
+            let rim = UIColor(red: 0.84, green: 0.60, blue: 0.52, alpha: 1)
+            surface([0, 0, -0.16], [0.09, 0.07, 0.045], tissue)
+            for side: Float in [-1, 1] {
+                surface([side * 0.046, 0, -0.068], [0.020, 0.055, 0.062], tissue)
+                surface([side * 0.010, -0.004, -0.109], [0.005, 0.014, 0.009], rim)
+            }
+            surface([0, -0.004, -0.112], [0.008, 0.014, 0.005], .black)
+            surface([0, 0.017, -0.091], [0.020, 0.006, 0.008], tissue)
         }
-        surface([0, -0.004, -0.112], [0.008, 0.014, 0.005], .black)
-        surface([0, 0.017, -0.091], [0.020, 0.006, 0.008], tissue)
         let camera = SCNNode()
         camera.camera = SCNCamera()
         camera.camera?.zNear = 0.001

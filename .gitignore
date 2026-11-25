@@ -1,3 +1,5 @@
 .build/
 GoogleService-Info.plist
 TabletopTrainerFirebase.xcodeproj/
+
+TabletopTrainer*Blade.xcodeproj/

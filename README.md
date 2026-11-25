@@ -16,3 +16,11 @@ The default scheme runs the full recorded practice with the local answer card. F
 After reveal, **Coach on this iPhone** requests on-device inference only. **Allow cloud fallback** requires a separate choice for the current rep. The coach accepts one of two predefined lesson objectives and leaves the deterministic answer card visible. It sends only the synthetic outcome and POGO estimate and reference bands. Keep the Firebase config, credentials, and any debug token out of published files.
 
 Coach compilation and real provider verification are tracked independently. Use one synthetic rep to verify airplane-mode local coaching, explicitly approved Firebase fallback, and the deterministic result when the model cannot provide an approved objective.
+
+## Live blade motion on a research iPhone
+
+With access to the licensed device frameworks, set `TRAINER_BLADE_SDK` to their local directory and run `ruby generate.rb`. Build the generated **TabletopTrainerBlade** project for the phone. The SDK requires versioned app metadata. The generated project contains local paths and is excluded from source control.
+
+Open [the trainer QR](Artwork/motion-marker.png) on a second screen. Connect the blade and choose **Live blade motion**. Aim at the QR until **Marker found** appears, then tap **Set starting view**. Turn or move the blade with the QR visible. Covering it or disconnecting the blade should clear the view. This screen processes frames in memory. A nominal 40 mm code and assumed optics support relative motion only. Screen zoom affects scale. Setting a starting view does not register the virtual mouth to the tabletop.
+
+The optional local build input `TRAINER_RESEARCH_SCENE` accepts an authorized, meter-scale USDZ named `PrivateAirway.usdz` in camera-local coordinates. It is used in the live-motion screen. The default renderer uses schematic geometry.
