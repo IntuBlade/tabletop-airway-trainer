@@ -45,3 +45,7 @@ Andrew confirmed on the physical iPhone that the live blade image switched to th
 ### Registered tabletop setup in Airway Practice
 
 Installed and launched the standalone trainer with QR-referenced head placement and a registered virtual camera path. The camera pose now supports time-based smoothing of position and orientation. Missing measurements clear the filter, and reacquisition starts fresh. Nine tests passed, including coordinate-frame invariance and jitter/dropout behavior. Live movement at the placed mouth and the perceptual effect of smoothing still need physical verification after accessory access is provisioned for the trainer.
+
+### Blade video during aiming
+
+The staging trainer connected to the blade, but its aiming screen only displayed marker status. It now displays the latest SDK image until a usable registered pose is available and returns to the live image when marker tracking is lost. Disconnecting, leaving the preview, or a stale frame clears the image. Preview frames are held in memory. The signed fix installed and launched on the research iPhone.

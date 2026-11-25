@@ -17,6 +17,7 @@ final class TrainerBlade: NSObject, CameraDelegate, @unchecked Sendable {
     private var active = false
     private var busy = false
     private var generation = 0
+    private var latestImage: UIImage?
     private var lastFrame = -Double.infinity
     private var lastPose: simd_float4x4?
     private var filter = BladePoseFilter()
@@ -60,14 +61,15 @@ final class TrainerBlade: NSObject, CameraDelegate, @unchecked Sendable {
             generation += 1
             filter = BladePoseFilter()
             lastPose = nil
+            latestImage = nil
             lastFrame = -.infinity
         }
     }
 
-    func snapshot() -> (hasFrames: Bool, pose: simd_float4x4?, connection: String) {
+    func snapshot() -> (image: UIImage?, pose: simd_float4x4?, connection: String) {
         lock.withLock {
             let now = CACurrentMediaTime()
-            return (now - lastFrame < 0.6, now - poseTime < 0.4 ? lastPose : nil, connection)
+            return (now - lastFrame < 0.6 ? latestImage : nil, now - poseTime < 0.4 ? lastPose : nil, connection)
         }
     }
 
@@ -76,6 +78,7 @@ final class TrainerBlade: NSObject, CameraDelegate, @unchecked Sendable {
         let now = CACurrentMediaTime()
         let ticket: Int? = lock.withLock {
             guard active else { return nil }
+            latestImage = image
             lastFrame = now
             guard !busy else { return nil }
             busy = true
@@ -114,7 +117,7 @@ final class TrainerBlade: NSObject, CameraDelegate, @unchecked Sendable {
     func receiveDeviceConflicted(_ conflicted: Bool) { if conflicted { invalidate(); setConnection("Blade in use by another app") } }
 
     private func invalidate() {
-        lock.withLock { generation += 1; filter = BladePoseFilter(); lastPose = nil; lastFrame = -.infinity }
+        lock.withLock { generation += 1; filter = BladePoseFilter(); lastPose = nil; latestImage = nil; lastFrame = -.infinity }
     }
 }
 
@@ -124,15 +127,25 @@ struct LiveBladeMotion: View {
     @State private var reference: BladeRegistration?
 
     var body: some View {
-        TimelineView(.periodic(from: .now, by: 0.08)) { _ in
+        TimelineView(.animation(minimumInterval: 1.0 / 30, paused: phase != .active)) { _ in
             let sample = TrainerBlade.shared.snapshot()
             VStack(alignment: .leading, spacing: 16) {
                 if let registration = station ?? reference, let pose = registration.mouthFromCamera(referenceFromCamera: sample.pose) {
                     SyntheticAirwayCamera(mouthFromCamera: pose, useResearchScene: true).aspectRatio(3/4, contentMode: .fit)
+                } else if let image = sample.image {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFit()
+                        .accessibilityLabel("Live blade video")
+                        .overlay(alignment: .bottomLeading) {
+                            Text(sample.pose == nil ? "Live blade · Aim at the trainer QR" : "Live blade · Marker found")
+                                .font(.caption.bold()).padding(8)
+                                .foregroundStyle(.white).background(.black.opacity(0.75))
+                        }
+                        .onAppear { NSLog("Trainer preview: presenting live blade frames") }
                 } else {
-                    ContentUnavailableView(sample.hasFrames ? (sample.pose == nil ? "Looking for trainer marker" : "Marker found") : sample.connection,
-                                           systemImage: "viewfinder",
-                                           description: Text(sample.hasFrames ? "Aim at the trainer QR on a second screen." : "The marker detector starts when the SDK delivers a blade image."))
+                    ContentUnavailableView(sample.connection, systemImage: "viewfinder",
+                        description: Text("Live video appears here as soon as a blade image arrives."))
                 }
                 Text(station == nil ? "Relative motion preview · Recording off" : "Registered tabletop preview · Recording off").font(.headline)
                 if station == nil {
