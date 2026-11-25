@@ -1,6 +1,7 @@
 import SwiftUI
 import Vision
 import QuartzCore
+import CoreImage
 #if canImport(BaseCamera)
 import BaseCamera
 import ExternalAccessory
@@ -20,6 +21,14 @@ final class TrainerBlade: NSObject, CameraDelegate, @unchecked Sendable {
     private var lastPose: simd_float4x4?
     private var poseTime = -Double.infinity
     private var started = false
+    private let imageContext = CIContext()
+    private var connection = "Waiting for blade connection"
+    private var sdkMessage: NSObjectProtocol?
+
+    private func setConnection(_ value: String) {
+        lock.withLock { connection = value }
+        NSLog("Trainer accessory: %@", value)
+    }
 
     @MainActor func start() {
         guard !started else { return }
@@ -29,7 +38,14 @@ final class TrainerBlade: NSObject, CameraDelegate, @unchecked Sendable {
         started = true
         EAAccessoryManager.shared().registerForLocalNotifications()
         CameraManager.share().addObserver(self)
-        WDLog.share.logLevel = .off
+        sdkMessage = NotificationCenter.default.addObserver(forName: .WDLogMessage, object: nil, queue: nil) { [weak self] note in
+            let text = String(describing: note.object).lowercased()
+            if text.contains("not supported") && (text.contains("bundle") || text.contains("protocol")) {
+                self?.setConnection("Camera SDK rejected this app identity")
+            }
+        }
+        WDLog.share.logNotifiy = true
+        WDLog.share.logLevel = .info
         CMImageFilter.share.cropCircle = false
         CMImageFilter.share.cropSquare = false
         CMImageFilter.share.cropCircleOpaque = false
@@ -46,15 +62,15 @@ final class TrainerBlade: NSObject, CameraDelegate, @unchecked Sendable {
         }
     }
 
-    func snapshot() -> (hasFrames: Bool, pose: simd_float4x4?) {
+    func snapshot() -> (hasFrames: Bool, pose: simd_float4x4?, connection: String) {
         lock.withLock {
             let now = CACurrentMediaTime()
-            return (now - lastFrame < 0.6, now - poseTime < 0.4 ? lastPose : nil)
+            return (now - lastFrame < 0.6, now - poseTime < 0.4 ? lastPose : nil, connection)
         }
     }
 
     func receive(_ data: Data!, image: UIImage!) {
-        guard let cg = image?.cgImage else { return }
+        guard let image else { return }
         let now = CACurrentMediaTime()
         let ticket: Int? = lock.withLock {
             guard active else { return nil }
@@ -65,7 +81,8 @@ final class TrainerBlade: NSObject, CameraDelegate, @unchecked Sendable {
         }
         guard let ticket else { return }
         worker.async {
-            let pose = try? TrainerMarker.pose(in: cg)
+            let cg = image.cgImage ?? image.ciImage.flatMap { self.imageContext.createCGImage($0, from: $0.extent) }
+            let pose = cg.flatMap { try? TrainerMarker.pose(in: $0) }
             self.lock.withLock {
                 self.busy = false
                 guard self.generation == ticket else { return }
@@ -76,10 +93,23 @@ final class TrainerBlade: NSObject, CameraDelegate, @unchecked Sendable {
     }
 
     func deviceConnect(with status: CMConnectStatus, param: [AnyHashable: Any]!) {
+        let report = String(describing: param).lowercased()
+        if report.contains("not supported") {
+            setConnection("Camera SDK rejected this app identity")
+        } else {
+            switch status {
+            case .connected: setConnection("Blade connected; waiting for images")
+            case .errorButContinue: setConnection("Blade reported a license warning")
+            case .disconnected: setConnection("Blade disconnected")
+            case .error: setConnection("Blade SDK connection error")
+            case .connecting, .connectedAndCheckingLicence: setConnection("Checking blade connection")
+            @unknown default: setConnection("Unknown blade connection state")
+            }
+        }
         if status != .connected && status != .errorButContinue { invalidate() }
     }
 
-    func receiveDeviceConflicted(_ conflicted: Bool) { if conflicted { invalidate() } }
+    func receiveDeviceConflicted(_ conflicted: Bool) { if conflicted { invalidate(); setConnection("Blade in use by another app") } }
 
     private func invalidate() {
         lock.withLock { generation += 1; lastPose = nil; lastFrame = -.infinity }
@@ -97,9 +127,9 @@ struct LiveBladeMotion: View {
                 if let reference, let pose = reference.mouthFromCamera(referenceFromCamera: sample.pose) {
                     SyntheticAirwayCamera(mouthFromCamera: pose, useResearchScene: true).aspectRatio(3/4, contentMode: .fit)
                 } else {
-                    ContentUnavailableView(sample.hasFrames ? (sample.pose == nil ? "Looking for trainer marker" : "Marker found") : "Waiting for blade frames",
+                    ContentUnavailableView(sample.hasFrames ? (sample.pose == nil ? "Looking for trainer marker" : "Marker found") : sample.connection,
                                            systemImage: "viewfinder",
-                                           description: Text("Connect the blade and aim at the trainer QR on a second screen."))
+                                           description: Text(sample.hasFrames ? "Aim at the trainer QR on a second screen." : "The marker detector starts when the SDK delivers a blade image."))
                 }
                 Text("Relative motion preview · Recording off").font(.headline)
                 Text("Set the starting view, then move or turn the blade while keeping the code visible. Distance and table placement are uncalibrated.")

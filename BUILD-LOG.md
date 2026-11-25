@@ -31,3 +31,7 @@ Connected the accessory callback to an in-memory QR detector and the virtual cam
 The first blade-enabled install crashed on launch. The iPhone crash report located the fault in SDK startup. The build lacked version metadata. Adding release and build versions restored startup on the same phone. The app now checks for both fields before starting the SDK.
 
 Reworked the setup head’s brow, cheeks and mouth relief and applied a newly generated face texture. The private build can load a separate authorized airway mesh. The next milestones are measured blade optics, shared mouth registration, target visibility across the full movement, and educator-reviewed landmark and POGO reference views.
+
+### Physical accessory connection check
+
+The research iPhone reported one attached accessory. The SDK began connecting, then explicitly rejected the standalone app identity before delivering images. The live screen now shows SDK connection status, including identity rejection and accessory conflicts. Enabling the standalone identity requires vendor support. Marker tracking and the carton sweeps were not exercised in this check.
