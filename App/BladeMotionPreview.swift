@@ -73,7 +73,9 @@ struct SyntheticAirwayCamera: UIViewRepresentable {
             scene.rootNode.enumerateChildNodes { node, _ in
                 for material in node.geometry?.materials ?? [] {
                     material.isDoubleSided = true
-                    material.roughness.contents = 0.42
+                    material.lightingModel = .blinn
+                    material.specular.contents = UIColor(white: 0.38, alpha: 1)
+                    material.shininess = 0.40
                 }
             }
         } else {
@@ -93,9 +95,28 @@ struct SyntheticAirwayCamera: UIViewRepresentable {
         camera.camera?.zFar = 1
         if useResearchScene { camera.camera?.projectionDirection = .horizontal }
         camera.camera?.fieldOfView = TrainerMarker.horizontalFOV
-        camera.light = SCNLight()
-        camera.light?.type = .omni
-        camera.light?.intensity = 700
+        if useResearchScene, Self.hasResearchScene {
+            let lamp = SCNNode()
+            lamp.simdPosition = [0.002, 0.001, -0.001]
+            lamp.light = SCNLight()
+            lamp.light?.type = .spot
+            lamp.light?.spotInnerAngle = 52
+            lamp.light?.spotOuterAngle = 96
+            lamp.light?.attenuationStartDistance = 0.018
+            lamp.light?.attenuationEndDistance = 0.16
+            lamp.light?.intensity = 1100
+            camera.addChildNode(lamp)
+
+            let fill = SCNNode()
+            fill.light = SCNLight()
+            fill.light?.type = .ambient
+            fill.light?.intensity = 100
+            scene.rootNode.addChildNode(fill)
+        } else {
+            camera.light = SCNLight()
+            camera.light?.type = .omni
+            camera.light?.intensity = 700
+        }
         camera.simdTransform = mouthFromCamera
         scene.rootNode.addChildNode(camera)
         view.pointOfView = camera

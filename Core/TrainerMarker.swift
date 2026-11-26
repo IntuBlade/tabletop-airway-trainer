@@ -64,13 +64,18 @@ enum TrainerMarker {
 // Three recent observations are required after loss. Never extrapolate a hidden QR.
 struct MarkerSequence {
     private var samples = [[SIMD2<Double>]]()
+    private var stableCorners: [SIMD2<Double>]?
     private var lastTime = -Double.infinity
 
     mutating func pose(_ corners: [SIMD2<Double>]?, at time: Double) -> simd_float4x4? {
-        if time <= lastTime || time - lastTime > 0.25 { samples.removeAll() }
+        if time <= lastTime || time - lastTime > 0.25 {
+            samples.removeAll()
+            stableCorners = nil
+        }
         lastTime = time
         guard let corners, TrainerMarker.solve(corners) != nil else {
             samples.removeAll()
+            stableCorners = nil
             return nil
         }
         samples.append(corners)
@@ -83,6 +88,18 @@ struct MarkerSequence {
             let a = samples[0][i], b = samples[1][i], c = samples[2][i]
             return SIMD2(median(a.x,b.x,c.x), median(a.y,b.y,c.y))
         }
-        return TrainerMarker.solve(filtered)
+        // Stabilize the measurements before perspective turns subpixel corner
+        // noise into millimeters of lateral camera motion. Compare to the last
+        // accepted corners so a slow, deliberate movement accumulates.
+        if let stableCorners {
+            let distance = zip(filtered, stableCorners).map { simd_distance($0, $1) }.max() ?? 0
+            let noiseFloor = 0.0015  // Camera-normalized units, about 0.7 px at 640 px wide.
+            if distance <= noiseFloor { return TrainerMarker.solve(stableCorners) }
+            let weight = 1 - noiseFloor / distance
+            self.stableCorners = zip(stableCorners, filtered).map { $0 + weight * ($1 - $0) }
+        } else {
+            stableCorners = filtered
+        }
+        return stableCorners.flatMap(TrainerMarker.solve)
     }
 }

@@ -100,9 +100,16 @@ struct BladePoseFilter {
         guard let sample else { previous = nil; return nil }
         let dt = now - time
         guard let previous, dt > 0, dt < 0.20 else { previous = sample; return sample }
-        // 65 ms exponential smoothing, independent of detector frame rate.
-        let alpha = Float(1 - exp(-dt / 0.065))
-        let rotation = simd_slerp(simd_quatf(previous), simd_quatf(sample), alpha)
+        let priorRotation = simd_quatf(previous)
+        let measuredRotation = simd_quatf(sample)
+        let travel = simd_distance(previous.columns.3, sample.columns.3)
+        let turn = 2 * acos(min(1, abs(simd_dot(priorRotation.vector, measuredRotation.vector))))
+        // Ease small residuals. Follow a deliberate change of roughly 1 cm
+        // or 8 degrees more promptly, including at a lower detector cadence.
+        let motion = min(1, max(travel / 0.01, turn / 0.14))
+        let timeConstant = 0.065 - 0.045 * Double(motion)
+        let alpha = Float(1 - exp(-dt / timeConstant))
+        let rotation = simd_slerp(priorRotation, measuredRotation, alpha)
         var smoothed = simd_float4x4(rotation)
         smoothed.columns.3 = previous.columns.3 + alpha * (sample.columns.3 - previous.columns.3)
         self.previous = smoothed
