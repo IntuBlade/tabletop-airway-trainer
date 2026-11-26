@@ -83,3 +83,7 @@ The published QR and packaged mesh rendered together at 14% of life size in the 
 On the mirrored phone, starting the previous rep immediately replaced the tabletop head with a small exterior view of the airway mesh. The updated trainer keeps the blade image and the head visible during approach. A tracked crossing of the nominal lip opening switches to the interior. Withdrawal past the lips restores the exterior, and tracking loss clears passage state. The opening dimensions are prototype model parameters.
 
 Fourteen software tests passed. On the phone, starting practice at 9% scale kept the face over the QR. The head grew on approach and shrank on withdrawal. At close range the QR nearly filled the image. Switching to life size reproduced the reported outlined QR with no visible face at the same short working distance. The full exercise still needs a physical lip crossing with continuous tracking. No carton sweeps were run.
+
+### Printing the tabletop marker at a known size
+
+The QR PNG could be enlarged to fill the page in the print dialog. The pose solver assumes a 40 mm square, so an oversized print makes the blade appear closer to the page and can put the full-size virtual head behind the lens. The README now links a US Letter PDF with the original QR at 40 mm and a separate 40 mm ruler check. Apple Vision decoded the rendered sheet. Physical placement and mouth entry still need a pass with a correctly sized print.
