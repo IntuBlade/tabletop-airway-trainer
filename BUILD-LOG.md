@@ -87,3 +87,9 @@ Fourteen software tests passed. On the phone, starting practice at 9% scale kept
 ### Printing the tabletop marker at a known size
 
 The QR PNG could be enlarged to fill the page in the print dialog. The pose solver assumes a 40 mm square, so an oversized print makes the blade appear closer to the page and can put the full-size virtual head behind the lens. The README now links a US Letter PDF with the original QR at 40 mm and a separate 40 mm ruler check. Apple Vision decoded the rendered sheet. Physical placement and mouth entry still need a pass with a correctly sized print.
+
+### Starting a rep inside the mouth
+
+Live practice now opens just past the simulated incisors as soon as the blade tracks the QR. The first pose anchors the starting view. In the research scene, physical forward and backward movement follows the bend from mouth to throat. Blade turns and sideways movement steer the view. If the QR leaves the frame, the trainer shows the blade feed and keeps the original reference for reacquisition. **Reset to teeth** uses the current tracked pose as a new start.
+
+Thirteen software checks passed. The same camera code rendered the start, approach and throat on the local research mesh. Returning to the starting position produced the same rendered image. The signed build installed on the research iPhone. A locked phone and a Mirroring timeout prevented the live blade check.

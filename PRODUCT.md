@@ -12,8 +12,8 @@ A medic practicing on an ordinary table with a phone and an IntuBlade. A recorde
 
 ## Product Purpose
 
-Place a virtual mannequin on the table, guide the real blade into its virtual mouth, then practice deliberately losing and recovering a simulated airway view. Keep teaching questions and answers tied to the frames the learner marked.
+Use a tabletop QR to start just inside a simulated mouth. Move the real blade to find, lose and recover the airway view. Keep teaching questions and answers tied to the frames the learner marked.
 
 ## Capabilities and Constraints
 
-The standalone trainer uses the blade camera for placement and practice. The phone displays the blade video and the virtual airway. The tabletop reference establishes the plane where the learner places the head. The preview and tracking checks have separate evidence. Practice data must stay local unless the learner explicitly requests cloud coaching.
+The standalone trainer tracks a fixed tabletop QR through the blade camera. The first stable blade pose sets the starting view inside the mouth. The phone displays the blade video during QR acquisition and the virtual airway during practice. The preview and tracking checks have separate evidence. Practice data must stay local unless the learner explicitly requests cloud coaching.

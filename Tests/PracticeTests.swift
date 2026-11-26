@@ -149,68 +149,43 @@ extension BladeRegistrationTests {
         XCTAssertLessThan(simd_length(SIMD2(mouth.x,mouth.y) / mouth.z), 0.002)
     }
 
-    func testFlatQRLocatesMouthInSetupAndPractice() throws {
-        let placement = BladeTablePlacement()
-        let lip = placement.markerFromHead * SIMD4(TableStation.lipsOnHead, 1)
-        XCTAssertLessThan(simd_length(lip - SIMD4(0,0,-0.135,1)), 0.00001)
-        let practiceLip = placement.station.referenceFromMouth * SIMD4<Float>(0,0.077,0.026,1)
-        XCTAssertLessThan(simd_length(lip - practiceLip), 0.00001)
+    func testFirstQRLockStartsAtTeethAndKeepsReferenceAcrossMovement() throws {
+        var startingBlade = simd_float4x4(simd_quatf(angle: 2.7, axis: [1, 0, 0]))
+        startingBlade.columns.3 = [0.015, -0.02, -0.18, 1]
+        let teeth = AirwayEntry.camera(for: matrix_identity_float4x4, research: true)
+        let registration = try XCTUnwrap(BladeRegistration.startingAt(
+            referenceFromCamera: startingBlade, mouthFromCamera: teeth
+        ))
 
-        var lens = simd_float4x4(simd_quatf(angle: .pi, axis: [1,0,0]))
-        lens.columns.3 = [0,0,-0.35,1]
-        XCTAssertTrue(placement.mouthInFrame(markerFromLens: lens, aspect: 4/3))
-        lens.columns.3.x = 0.25
-        XCTAssertFalse(placement.mouthInFrame(markerFromLens: lens, aspect: 4/3))
-        lens.columns.3 = [0,0,-0.08,1]
-        XCTAssertFalse(placement.mouthInFrame(markerFromLens: lens, aspect: 4/3))
-    }
-}
-
-extension BladeRegistrationTests {
-    func testCloseBladePlacesHeadAndKeepsScaleThroughWithdrawal() throws {
-        let placement = BladeTablePlacement()
-        var lens = simd_float4x4(simd_quatf(angle: .pi, axis: [1,0,0]))
-        lens.columns.3 = [0,0,-0.08,1]
-        let scale = try XCTUnwrap(TabletopScale.fitting(lens, aspect: 4/3, placement: placement))
-        XCTAssertLessThan(scale.fraction, 1)
-        for distance: Float in [0.08, 0.07, 0.08, 0.12] {
-            lens.columns.3.z = -distance
-            let modelLens = scale.modelCamera(lens)
-            XCTAssertTrue(placement.mouthInFrame(markerFromLens: modelLens, aspect: 4/3))
-            let airway = try XCTUnwrap(placement.station.mouthFromCamera(referenceFromCamera: modelLens))
-            let interiorLip = airway.inverse * SIMD4<Float>(0,0.077,0.026,1)
-            let exteriorLip = modelLens.inverse * placement.markerFromHead * SIMD4(TableStation.lipsOnHead,1)
-            XCTAssertLessThan(simd_length(interiorLip - exteriorLip), 0.00001)
+        var advanceAndTurn = simd_float4x4(simd_quatf(angle: 0.24, axis: [0, 1, 0]))
+        advanceAndTurn.columns.3 = [0.004, 0, -0.022, 1]
+        func check(_ blade: simd_float4x4, _ expected: simd_float4x4) throws {
+            let rendered = try XCTUnwrap(registration.mouthFromCamera(referenceFromCamera: blade))
+            for column in 0..<4 {
+                XCTAssertLessThan(simd_length(rendered[column] - expected[column]), 0.00001)
+            }
         }
-        lens.columns.3.z = -1
-        XCTAssertEqual(TabletopScale.fitting(lens, aspect: 4/3, placement: placement), .fullSize)
-        lens.columns.3.x = 2
-        XCTAssertNil(TabletopScale.fitting(lens, aspect: 4/3, placement: placement))
-    }
-}
 
-extension BladeRegistrationTests {
-    func testPracticeKeepsExteriorUntilLensPassesBetweenLips() {
-        func lens(_ x: Float, _ height: Float) -> simd_float4x4 {
-            var m = simd_float4x4(simd_quatf(angle: -.pi / 2, axis: [1,0,0]))
-            m.columns.3 = SIMD4(TableStation.lipsInScene + SIMD3(x,height,0), 1)
-            return m
+        try check(startingBlade, teeth)
+        try check(startingBlade * advanceAndTurn, teeth * advanceAndTurn)
+        XCTAssertNil(registration.mouthFromCamera(referenceFromCamera: nil))
+        try check(startingBlade * advanceAndTurn, teeth * advanceAndTurn)
+        try check(startingBlade, teeth)
+    }
+
+    func testRealDepthAdvancesAlongOralPathAndBackToStart() {
+        let start = AirwayEntry.camera(for: matrix_identity_float4x4, research: true)
+        var movement = matrix_identity_float4x4
+        movement.columns.3.z = -0.070
+        let throat = AirwayEntry.camera(for: movement, research: true)
+        for column in 0..<4 {
+            XCTAssertLessThan(simd_length(throat[column] - matrix_identity_float4x4[column]), 0.00001)
         }
-        var gate = MouthPassage()
-        gate.observe(lens(0, 0.4))
-        XCTAssertFalse(gate.inside)
-        gate.observe(lens(0.05, 0.01))
-        gate.observe(lens(0.05, -0.01))
-        XCTAssertFalse(gate.inside)
-        gate.observe(lens(0, 0.015))
-        gate.observe(lens(0, -0.005))
-        XCTAssertTrue(gate.inside)
-        gate.observe(lens(0, 0.002))
-        XCTAssertTrue(gate.inside)
-        gate.observe(lens(0, 0.012))
-        XCTAssertFalse(gate.inside)
-        gate.observe(nil)
-        gate.observe(lens(0, -0.02))
-        XCTAssertFalse(gate.inside)
+
+        movement = simd_float4x4(simd_quatf(angle: 0.2, axis: [0, 1, 0]))
+        let turned = AirwayEntry.camera(for: movement, research: true)
+        for column in 0..<4 {
+            XCTAssertLessThan(simd_length(turned[column] - (start * movement)[column]), 0.00001)
+        }
     }
 }

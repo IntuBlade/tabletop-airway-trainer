@@ -5,6 +5,14 @@ import simd
 struct BladeRegistration {
     let referenceFromMouth: simd_float4x4
 
+    /// Map the first tracked blade pose to the chosen view inside the mouth.
+    /// Further poses apply displacement and rotation in the starting blade frame.
+    static func startingAt(referenceFromCamera: simd_float4x4,
+                           mouthFromCamera: simd_float4x4) -> Self? {
+        guard isRigid(referenceFromCamera), isRigid(mouthFromCamera) else { return nil }
+        return Self(referenceFromMouth: referenceFromCamera * mouthFromCamera.inverse)
+    }
+
     func mouthFromCamera(referenceFromCamera: simd_float4x4?) -> simd_float4x4? {
         guard let referenceFromCamera, Self.isRigid(referenceFromMouth),
               Self.isRigid(referenceFromCamera) else { return nil }
@@ -102,84 +110,40 @@ struct BladePoseFilter {
     }
 }
 
-struct BladeTablePlacement {
-    let markerFromHead: simd_float4x4
-    let station: BladeRegistration
+enum AirwayEntry {
+    // Poses checked against the research mesh, from just past the incisors
+    // to the throat. Advance is still driven by blade displacement in meters.
+    private static let oralPath: [(depth: Float, pitch: Float, position: SIMD3<Float>)] = [
+        (0,     -1.18, [0, 0.060, 0.032]),
+        (0.021, -1.05, [0, 0.041, 0.024]),
+        (0.043, -0.60, [0, 0.020, 0.019]),
+        (0.059, -0.25, [0, 0.008, 0.008]),
+        (0.070,  0,    [0, 0, 0]),
+    ]
 
-    /// The print defines placement. Aiming or turning the blade only moves the camera.
-    init() {
-        let markerFromImage = simd_float4x4(simd_quatf(angle: -.pi / 2, axis: [1,0,0]))
-        var base = markerFromImage
-        base.columns.3.y = -TableStation.lipsOnHead.z
-        markerFromHead = base
-        station = TableStation.registration(worldFromImage: markerFromImage, worldFromHeadBase: base)
-    }
-
-    func mouthInFrame(markerFromLens: simd_float4x4, aspect: Float) -> Bool {
-        let point = markerFromLens.inverse * markerFromHead * SIMD4(TableStation.lipsOnHead, 1)
-        let halfWidth = -point.z * Float(TrainerMarker.halfWidthAtUnitDepth)
-        return point.z < -0.001 && abs(point.x) < halfWidth && abs(point.y) * aspect < halfWidth
-    }
-}
-
-/// A single, fixed tabletop scale. Both cameras operate in the same model meters.
-struct TabletopScale: Equatable {
-    let fraction: Float
-    static let fullSize = Self(fraction: 1)
-
-    func modelCamera(_ physical: simd_float4x4) -> simd_float4x4 {
-        var camera = physical
-        camera.columns.3 = SIMD4(physical.columns.3.xyz / fraction, 1)
-        return camera
-    }
-
-    static func fitting(_ physical: simd_float4x4, aspect: Float,
-                        placement: BladeTablePlacement) -> Self? {
-        guard BladeRegistration.isRigid(physical), aspect > 0 else { return nil }
-        let lensFromMarker = physical.inverse
-        // Bounds of the bundled shell in meters, including its raised surface.
-        let corners = [-0.085, 0.085].flatMap { (x: Float) in
-            [0, 0.201].flatMap { (y: Float) in
-                [-0.120, 0.120].map { (z: Float) in
-                    (placement.markerFromHead * SIMD4(x, y, z, 1)).xyz
-                }
-            }
+    static func camera(for movement: simd_float4x4, research: Bool) -> simd_float4x4 {
+        guard research else {
+            var start = simd_float4x4(simd_quatf(angle: -0.12, axis: [1, 0, 0]))
+            start.columns.3 = [0, 0, 0.025, 1]
+            return start * movement
         }
-        func fits(_ scale: Float) -> Bool {
-            corners.allSatisfy { corner in
-                let p = lensFromMarker * SIMD4(corner * scale, 1)
-                let margin = -p.z * Float(TrainerMarker.halfWidthAtUnitDepth) * 0.92
-                return p.z < -0.001 && abs(p.x) < margin && abs(p.y) * aspect < margin
-            }
-        }
-        if fits(1) { return .fullSize }
-        guard fits(0.025) else { return nil }
-        var low: Float = 0.025, high: Float = 1
-        for _ in 0..<10 {
-            let mid = (low + high) / 2
-            if fits(mid) { low = mid } else { high = mid }
-        }
-        return Self(fraction: low)
-    }
-}
 
-/// The shell faces up the scene's Y axis. Track passage through its nominal
-/// lip opening; keep the interior visible if the lens turns after entry.
-struct MouthPassage {
-    private(set) var inside = false
-    private var previous: SIMD3<Float>?
+        let depth = -movement.columns.3.z
+        let last = oralPath[oralPath.count - 1]
+        let guidedDepth = min(max(0, depth), last.depth)
+        let index = oralPath.dropFirst().firstIndex { guidedDepth <= $0.depth } ?? oralPath.count - 1
+        let from = oralPath[index - 1]
+        let to = oralPath[index]
+        let t = (guidedDepth - from.depth) / (to.depth - from.depth)
+        let pitch = from.pitch + t * (to.pitch - from.pitch)
+        let position = from.position + t * (to.position - from.position)
+        var guide = simd_float4x4(simd_quatf(angle: pitch, axis: [1, 0, 0]))
+        guide.columns.3 = SIMD4(position, 1)
 
-    mutating func observe(_ camera: simd_float4x4?) {
-        guard let camera else { self = Self(); return }
-        let tip = camera.columns.3.xyz - TableStation.lipsInScene
-        defer { previous = tip }
-        if inside {
-            if tip.y > 0.006 { inside = false }
-            return
-        }
-        guard let previous, previous.y > 0, tip.y <= 0, camera.columns.2.y > 0 else { return }
-        let crossing = previous + (tip - previous) * (previous.y / (previous.y - tip.y))
-        // Elliptical opening on the training shell, in model meters.
-        inside = simd_length_squared(SIMD2(crossing.x / 0.025, crossing.z / 0.018)) <= 1
+        // Overlay the learner's own lateral movement and rotation. Beyond
+        // either end of the guide, forward and backward motion remain live.
+        var steering = movement
+        steering.columns.3.z += guidedDepth
+        return guide * steering
     }
 }

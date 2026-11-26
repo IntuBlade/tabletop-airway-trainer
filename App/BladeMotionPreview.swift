@@ -47,6 +47,10 @@ struct SyntheticAirwayCamera: UIViewRepresentable {
     let mouthFromCamera: simd_float4x4
     var useResearchScene = false
 
+    private static let researchScene = Bundle.main.url(forResource: "PrivateAirway", withExtension: "usdz")
+        .flatMap { try? SCNScene(url: $0, options: nil) }
+    static var hasResearchScene: Bool { researchScene != nil }
+
     func makeUIView(context: Context) -> SCNView {
         let view = SCNView()
         let scene = SCNScene()
@@ -64,11 +68,8 @@ struct SyntheticAirwayCamera: UIViewRepresentable {
             node.simdScale = scale
             scene.rootNode.addChildNode(node)
         }
-        if useResearchScene, let url = Bundle.main.url(forResource: "PrivateAirway", withExtension: "usdz"),
-           let model = try? SCNScene(url: url, options: nil) {
-            for node in model.rootNode.childNodes {
-                scene.rootNode.addChildNode(node)
-            }
+        if useResearchScene, let model = Self.researchScene {
+            scene.rootNode.addChildNode(model.rootNode.clone())
             scene.rootNode.enumerateChildNodes { node, _ in
                 for material in node.geometry?.materials ?? [] {
                     material.isDoubleSided = true
