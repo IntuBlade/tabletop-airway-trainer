@@ -121,3 +121,44 @@ struct BladeTablePlacement {
         return point.z < -0.001 && abs(point.x) < halfWidth && abs(point.y) * aspect < halfWidth
     }
 }
+
+/// A single, fixed tabletop scale. Both cameras operate in the same model meters.
+struct TabletopScale: Equatable {
+    let fraction: Float
+    static let fullSize = Self(fraction: 1)
+
+    func modelCamera(_ physical: simd_float4x4) -> simd_float4x4 {
+        var camera = physical
+        camera.columns.3 = SIMD4(physical.columns.3.xyz / fraction, 1)
+        return camera
+    }
+
+    static func fitting(_ physical: simd_float4x4, aspect: Float,
+                        placement: BladeTablePlacement) -> Self? {
+        guard BladeRegistration.isRigid(physical), aspect > 0 else { return nil }
+        let lensFromMarker = physical.inverse
+        // Bounds of the bundled shell in meters, including its raised surface.
+        let corners = [-0.085, 0.085].flatMap { (x: Float) in
+            [0, 0.201].flatMap { (y: Float) in
+                [-0.120, 0.120].map { (z: Float) in
+                    (placement.markerFromHead * SIMD4(x, y, z, 1)).xyz
+                }
+            }
+        }
+        func fits(_ scale: Float) -> Bool {
+            corners.allSatisfy { corner in
+                let p = lensFromMarker * SIMD4(corner * scale, 1)
+                let margin = -p.z * Float(TrainerMarker.halfWidthAtUnitDepth) * 0.92
+                return p.z < -0.001 && abs(p.x) < margin && abs(p.y) * aspect < margin
+            }
+        }
+        if fits(1) { return .fullSize }
+        guard fits(0.025) else { return nil }
+        var low: Float = 0.025, high: Float = 1
+        for _ in 0..<10 {
+            let mid = (low + high) / 2
+            if fits(mid) { low = mid } else { high = mid }
+        }
+        return Self(fraction: low)
+    }
+}

@@ -165,3 +165,26 @@ extension BladeRegistrationTests {
         XCTAssertFalse(placement.mouthInFrame(markerFromLens: lens, aspect: 4/3))
     }
 }
+
+extension BladeRegistrationTests {
+    func testCloseBladePlacesHeadAndKeepsScaleThroughWithdrawal() throws {
+        let placement = BladeTablePlacement()
+        var lens = simd_float4x4(simd_quatf(angle: .pi, axis: [1,0,0]))
+        lens.columns.3 = [0,0,-0.08,1]
+        let scale = try XCTUnwrap(TabletopScale.fitting(lens, aspect: 4/3, placement: placement))
+        XCTAssertLessThan(scale.fraction, 1)
+        for distance: Float in [0.08, 0.07, 0.08, 0.12] {
+            lens.columns.3.z = -distance
+            let modelLens = scale.modelCamera(lens)
+            XCTAssertTrue(placement.mouthInFrame(markerFromLens: modelLens, aspect: 4/3))
+            let airway = try XCTUnwrap(placement.station.mouthFromCamera(referenceFromCamera: modelLens))
+            let interiorLip = airway.inverse * SIMD4<Float>(0,0.077,0.026,1)
+            let exteriorLip = modelLens.inverse * placement.markerFromHead * SIMD4(TableStation.lipsOnHead,1)
+            XCTAssertLessThan(simd_length(interiorLip - exteriorLip), 0.00001)
+        }
+        lens.columns.3.z = -1
+        XCTAssertEqual(TabletopScale.fitting(lens, aspect: 4/3, placement: placement), .fullSize)
+        lens.columns.3.x = 2
+        XCTAssertNil(TabletopScale.fitting(lens, aspect: 4/3, placement: placement))
+    }
+}

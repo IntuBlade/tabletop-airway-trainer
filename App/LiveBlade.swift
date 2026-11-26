@@ -141,37 +141,47 @@ struct LiveBladeMotion: View {
     @Environment(\.scenePhase) private var phase
     private let placement = BladeTablePlacement()
     @State private var practicing = false
+    @State private var placedScale: TabletopScale?
+    @State private var headFailed = false
 
     var body: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 30, paused: phase != .active)) { _ in
             let sample = TrainerBlade.shared.snapshot()
             let frame = sample.frame
             let inRep = practicing || station != nil
-            let camera = (station ?? placement.station).mouthFromCamera(referenceFromCamera: frame?.practicePose)
-            let mouthVisible = frame.flatMap { frame in
-                frame.setupPose.map { placement.mouthInFrame(markerFromLens: $0, aspect: Float(frame.aspect)) }
-            } ?? false
+            let candidate = placedScale == nil && station == nil ? frame.flatMap { frame in
+                frame.setupPose.flatMap { TabletopScale.fitting($0, aspect: Float(frame.aspect), placement: placement) }
+            } : nil
+            let scale = station == nil ? placedScale ?? candidate : .fullSize
+            let setupLens = frame?.setupPose.flatMap { pose in scale.map { $0.modelCamera(pose) } }
+            let practiceLens = frame?.practicePose.flatMap { pose in scale.map { $0.modelCamera(pose) } }
+            let camera = (station ?? placement.station).mouthFromCamera(referenceFromCamera: practiceLens)
+            let mouthVisible = setupLens.map { placement.mouthInFrame(markerFromLens: $0, aspect: Float(frame?.aspect ?? 1)) } ?? false
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
                     Color.black
                         .aspectRatio(frame?.aspect ?? 4/3, contentMode: .fit)
                         .overlay {
-                            if inRep, let camera {
-                                SyntheticAirwayCamera(mouthFromCamera: camera, useResearchScene: true)
-                            } else if let frame {
-                                ZStack {
-                                    Image(uiImage: frame.image).resizable()
-                                        .accessibilityLabel("Live blade video")
-                                    if !inRep {
-                                        BladeHeadOverlay(base: placement.markerFromHead, camera: frame.setupPose)
-                                            .opacity(frame.setupPose == nil ? 0 : 1)
-                                        if let corners = frame.corners {
-                                            MarkerOutline(corners: corners)
+                            ZStack {
+                                if let frame, !inRep || camera == nil {
+                                    ZStack {
+                                        Image(uiImage: frame.image).resizable()
+                                            .accessibilityLabel("Live blade video")
+                                        if !inRep {
+                                            BladeHeadOverlay(base: placement.markerFromHead, camera: setupLens, failed: $headFailed)
+                                                .opacity(setupLens == nil ? 0 : 1)
+                                            if let corners = frame.corners {
+                                                MarkerOutline(corners: corners)
+                                            }
                                         }
                                     }
+                                } else if frame == nil {
+                                    Text(sample.connection).foregroundStyle(.white)
                                 }
-                            } else {
-                                Text(sample.connection).foregroundStyle(.white)
+                                if inRep {
+                                    SyntheticAirwayCamera(mouthFromCamera: camera ?? matrix_identity_float4x4, useResearchScene: true)
+                                        .opacity(camera == nil ? 0 : 1)
+                                }
                             }
                         }
                         .clipped()
@@ -182,11 +192,27 @@ struct LiveBladeMotion: View {
                             Button("Return to setup") { practicing = false }
                         }
                     } else {
-                        if let frame { Text(setupHint(frame, mouthVisible: mouthVisible)) }
+                        if headFailed {
+                            Text("The trainer could not load its head model.")
+                        } else if let frame {
+                            Text(setupHint(frame, scale: scale, mouthVisible: mouthVisible))
+                        }
                         Button("Enter airway view") { practicing = true }
-                            .disabled(!mouthVisible || camera == nil).buttonStyle(.borderedProminent)
+                            .disabled(headFailed || !mouthVisible || camera == nil).buttonStyle(.borderedProminent)
+                        if let placedScale {
+                            Button("Fit head to current view") { self.placedScale = nil }
+                            if placedScale != .fullSize {
+                                Button("Use life-size head") { self.placedScale = .fullSize }
+                            }
+                        }
                     }
                 }.padding()
+            }
+            .onChange(of: candidate, initial: true) { _, value in
+                if placedScale == nil, let value {
+                    placedScale = value
+                    NSLog("Trainer setup: head placed at %d percent", Int((value.fraction * 100).rounded()))
+                }
             }
         }
         .navigationTitle("Blade practice").navigationBarTitleDisplayMode(.inline)
@@ -195,11 +221,13 @@ struct LiveBladeMotion: View {
         .onDisappear { TrainerBlade.shared.enable(false) }
     }
 
-    private func setupHint(_ frame: BladeFrame, mouthVisible: Bool) -> String {
+    private func setupHint(_ frame: BladeFrame, scale: TabletopScale?, mouthVisible: Bool) -> String {
         guard frame.corners != nil else { return "Lay the trainer QR flat. Aim the blade at the whole code, including its white border, until an outline appears. The black square should measure 40 mm." }
         guard frame.setupPose != nil else { return "QR found. Face it more squarely so the blade can place the head." }
+        guard let scale else { return "QR found. Center its outline in the blade view to place the head." }
         guard mouthVisible else { return "QR found. Pull the blade back and look down at the code until the mouth comes into view." }
-        return "The mouth sits above the center of the outlined QR. Keep the paper still as you move the blade."
+        let size = scale == .fullSize ? "Life-size head" : "Head at \(Int((scale.fraction * 100).rounded()))% of life size"
+        return "\(size) placed. The mouth is above the QR. Move the blade toward it."
     }
 }
 
@@ -225,18 +253,25 @@ private struct BladeHeadOverlay: UIViewRepresentable {
     let base: simd_float4x4
     let camera: simd_float4x4?
 
+    @Binding var failed: Bool
+
+    // Reuse the decoded mesh when a disconnect removes and recreates the preview.
+    private static let asset = Bundle.main.url(forResource: "TrainerHead", withExtension: "usdz")
+        .flatMap { try? SCNScene(url: $0, options: nil) }
+
     func makeUIView(context: Context) -> SCNView {
         let view = SCNView()
         view.isOpaque = false
         view.backgroundColor = .clear
         let scene = SCNScene()
-        if let url = Bundle.main.url(forResource: "TrainerHead", withExtension: "usdz"),
-           let asset = try? SCNScene(url: url, options: nil) {
+        if let asset = Self.asset {
             let head = asset.rootNode.clone()
             var surface = base
             surface.columns.3 += base.columns.1 * 0.012
             head.simdTransform = surface
             scene.rootNode.addChildNode(head)
+        } else {
+            DispatchQueue.main.async { failed = true }
         }
         let lens = SCNNode()
         lens.camera = SCNCamera()

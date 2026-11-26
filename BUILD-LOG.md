@@ -71,3 +71,9 @@ Rendering the packaged head against a generated straight-on image of the publish
 The setup screen inferred identity rejection from free-text SDK messages. It now uses the connection callback and its structured error code. A recent unprocessed blade frame can supply the preview while QR detection is pending; overlays still use the image that produced the pose. The debug build can open directly to blade setup and log the first image delivery without saving that image.
 
 On the research iPhone, the SDK reported a connected blade and delivered its first image to the open setup screen 42 milliseconds later. The existing 12 software tests passed. This run verifies delivery to the trainer. Physical mouth alignment through approach and withdrawal remains to be checked.
+
+### A close blade could read the QR while the mouth was behind the lens
+
+The nominal life-size mouth sits 135 mm above the paper. A simulated blade frame taken about 80 mm above a flat, centered marker reproduced the setup dead end. The new placement fits the entire exterior into the first usable blade view and holds that scale during the rep. The screen displays the scale, with explicit controls to refit or select life size. A smaller model changes physical travel, so it is a visual walkthrough. Setup and the interior use the same fixed scale.
+
+The published QR and packaged mesh rendered together at 14% of life size in the 80 mm fixture. Thirteen software tests passed, including advance and withdrawal using one fixed scale. The staging build was installed and opened on the research phone. The reported app exit had no matching trainer crash report; its cause remains open. The renderer now reuses the decoded head and keeps the interior scene alive across short tracking losses. Live placement with this build still needs confirmation.
