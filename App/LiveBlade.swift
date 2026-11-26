@@ -6,7 +6,6 @@ import CoreImage
 #if canImport(BaseCamera)
 import BaseCamera
 import ExternalAccessory
-import WDLogger
 #endif
 
 
@@ -34,7 +33,8 @@ final class TrainerBlade: NSObject, CameraDelegate, @unchecked Sendable {
     private var started = false
     private let imageContext = CIContext()
     private var connection = "Waiting for blade connection"
-    private var sdkMessage: NSObjectProtocol?
+    private var sawFrame = false
+    private var rawPreview: BladeFrame?
 
     private func setConnection(_ value: String) {
         lock.withLock { connection = value }
@@ -49,14 +49,6 @@ final class TrainerBlade: NSObject, CameraDelegate, @unchecked Sendable {
         started = true
         EAAccessoryManager.shared().registerForLocalNotifications()
         CameraManager.share().addObserver(self)
-        sdkMessage = NotificationCenter.default.addObserver(forName: .WDLogMessage, object: nil, queue: nil) { [weak self] note in
-            let text = String(describing: note.object).lowercased()
-            if text.contains("not supported") && (text.contains("bundle") || text.contains("protocol")) {
-                self?.setConnection("Camera SDK rejected this app identity")
-            }
-        }
-        WDLog.share.logNotifiy = true
-        WDLog.share.logLevel = .info
         CMImageFilter.share.cropCircle = false
         CMImageFilter.share.cropSquare = false
         CMImageFilter.share.cropCircleOpaque = false
@@ -71,13 +63,16 @@ final class TrainerBlade: NSObject, CameraDelegate, @unchecked Sendable {
             sequence = MarkerSequence()
             filter = BladePoseFilter()
             frame = nil
+            rawPreview = nil
+            sawFrame = false
         }
     }
 
     func snapshot() -> (frame: BladeFrame?, connection: String) {
         lock.withLock {
             let fresh = frame.flatMap { CACurrentMediaTime() - $0.captured < 0.4 ? $0 : nil }
-            return (fresh, connection)
+            let raw = rawPreview.flatMap { CACurrentMediaTime() - $0.captured < 0.4 ? $0 : nil }
+            return (fresh ?? raw, connection)
         }
     }
 
@@ -85,7 +80,13 @@ final class TrainerBlade: NSObject, CameraDelegate, @unchecked Sendable {
         guard let image else { return }
         let now = CACurrentMediaTime()
         let ticket: Int? = lock.withLock {
-            guard active, !busy else { return nil }
+            guard active else { return nil }
+            if !sawFrame {
+                sawFrame = true
+                NSLog("Trainer accessory: received first blade image in setup")
+            }
+            rawPreview = BladeFrame(image: image, corners: nil, setupPose: nil, practicePose: nil, captured: now)
+            guard !busy else { return nil }
             busy = true
             return generation
         }
@@ -108,18 +109,22 @@ final class TrainerBlade: NSObject, CameraDelegate, @unchecked Sendable {
     }
 
     func deviceConnect(with status: CMConnectStatus, param: [AnyHashable: Any]!) {
-        let report = String(describing: param).lowercased()
-        if report.contains("not supported") {
-            setConnection("Camera SDK rejected this app identity")
-        } else {
-            switch status {
-            case .connected: setConnection("Blade connected; waiting for images")
-            case .errorButContinue: setConnection("Blade reported a license warning")
-            case .disconnected: setConnection("Blade disconnected")
-            case .error: setConnection("Blade SDK connection error")
-            case .connecting, .connectedAndCheckingLicence: setConnection("Checking blade connection")
-            @unknown default: setConnection("Unknown blade connection state")
+        let code = (param?[CMErrorCodeKey] as? NSNumber)?.intValue
+        let detail = code.map { " (SDK code \($0))" } ?? ""
+        switch status {
+        case .connected: setConnection("Blade connected. Waiting for video.")
+        case .errorButContinue: setConnection("Blade connection warning" + detail + ". Waiting for video.")
+        case .disconnected: setConnection("Blade disconnected")
+        case .error:
+            switch code {
+            case CMErrorCode.appInfoNotSupport.rawValue:
+                setConnection("SDK rejected the app name, ID, or accessory protocol" + detail)
+            case CMErrorCode.licenseError.rawValue:
+                setConnection("Blade SDK license check failed" + detail)
+            default: setConnection("Blade SDK connection failed" + detail)
             }
+        case .connecting, .connectedAndCheckingLicence: setConnection("Checking blade connection")
+        @unknown default: setConnection("Unknown blade connection state" + detail)
         }
         if status != .connected && status != .errorButContinue { invalidate() }
     }
@@ -127,7 +132,7 @@ final class TrainerBlade: NSObject, CameraDelegate, @unchecked Sendable {
     func receiveDeviceConflicted(_ conflicted: Bool) { if conflicted { invalidate(); setConnection("Blade in use by another app") } }
 
     private func invalidate() {
-        lock.withLock { generation += 1; sequence = MarkerSequence(); filter = BladePoseFilter(); frame = nil }
+        lock.withLock { generation += 1; sequence = MarkerSequence(); filter = BladePoseFilter(); frame = nil; rawPreview = nil; sawFrame = false }
     }
 }
 
@@ -177,7 +182,7 @@ struct LiveBladeMotion: View {
                             Button("Return to setup") { practicing = false }
                         }
                     } else {
-                        Text(setupHint(frame, mouthVisible: mouthVisible))
+                        if let frame { Text(setupHint(frame, mouthVisible: mouthVisible)) }
                         Button("Enter airway view") { practicing = true }
                             .disabled(!mouthVisible || camera == nil).buttonStyle(.borderedProminent)
                     }
@@ -190,8 +195,7 @@ struct LiveBladeMotion: View {
         .onDisappear { TrainerBlade.shared.enable(false) }
     }
 
-    private func setupHint(_ frame: BladeFrame?, mouthVisible: Bool) -> String {
-        guard let frame else { return "Connect the blade to see its camera view." }
+    private func setupHint(_ frame: BladeFrame, mouthVisible: Bool) -> String {
         guard frame.corners != nil else { return "Lay the trainer QR flat. Aim the blade at the whole code, including its white border, until an outline appears. The black square should measure 40 mm." }
         guard frame.setupPose != nil else { return "QR found. Face it more squarely so the blade can place the head." }
         guard mouthVisible else { return "QR found. Pull the blade back and look down at the code until the mouth comes into view." }

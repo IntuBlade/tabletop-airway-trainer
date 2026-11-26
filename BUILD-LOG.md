@@ -65,3 +65,9 @@ The operator reported that phone-camera placement did not match the intended dev
 A physical setup attempt failed to line up. Setup had combined the newest blade image with an older filtered pose, and tapping picked a different point on the table depending on blade aim. The head now appears automatically with its nominal mouth above the QR center. Each setup overlay uses the same sensor pixels used for its pose. An outline identifies the decoded trainer QR, and the screen prompts the learner to back away when the mouth is outside the view.
 
 Rendering the packaged head against a generated straight-on image of the published QR exposed a second error. Roughly one pixel of corner asymmetry tilted the estimated head enough to visibly displace the mouth. The tracker now favors a straight-on estimate when a rotated square fits the measured corners, blending into the perspective estimate as the square becomes foreshortened. The rendered mouth returned to the image center on that fixture. Twelve software tests passed. Physical alignment during approach and withdrawal still needs verification with the blade.
+
+### Checking a reported SDK identity rejection
+
+The setup screen inferred identity rejection from free-text SDK messages. It now uses the connection callback and its structured error code. A recent unprocessed blade frame can supply the preview while QR detection is pending; overlays still use the image that produced the pose. The debug build can open directly to blade setup and log the first image delivery without saving that image.
+
+On the research iPhone, the SDK reported a connected blade and delivered its first image to the open setup screen 42 milliseconds later. The existing 12 software tests passed. This run verifies delivery to the trainer. Physical mouth alignment through approach and withdrawal remains to be checked.

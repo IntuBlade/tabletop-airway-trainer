@@ -14,7 +14,19 @@ let trainerTint = Color(uiColor: UIColor { traits in
         TrainerBlade.shared.start()
         #endif
     }
-    var body: some Scene { WindowGroup { TrainerHome() } }
+    var body: some Scene {
+        WindowGroup {
+            #if DEBUG && canImport(BaseCamera)
+            if ProcessInfo.processInfo.arguments.contains("--blade-setup") {
+                NavigationStack { LiveBladeMotion() }
+            } else {
+                TrainerHome()
+            }
+            #else
+            TrainerHome()
+            #endif
+        }
+    }
 }
 
 private struct TrainerHome: View {
