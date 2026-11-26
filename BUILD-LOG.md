@@ -77,3 +77,9 @@ On the research iPhone, the SDK reported a connected blade and delivered its fir
 The nominal life-size mouth sits 135 mm above the paper. A simulated blade frame taken about 80 mm above a flat, centered marker reproduced the setup dead end. The new placement fits the entire exterior into the first usable blade view and holds that scale during the rep. The screen displays the scale, with explicit controls to refit or select life size. A smaller model changes physical travel, so it is a visual walkthrough. Setup and the interior use the same fixed scale.
 
 The published QR and packaged mesh rendered together at 14% of life size in the 80 mm fixture. Thirteen software tests passed, including advance and withdrawal using one fixed scale. The staging build was installed and opened on the research phone. The reported app exit had no matching trainer crash report; its cause remains open. The renderer now reuses the decoded head and keeps the interior scene alive across short tracking losses. Live placement with this build still needs confirmation.
+
+### Watching the transition on the research iPhone
+
+On the mirrored phone, starting the previous rep immediately replaced the tabletop head with a small exterior view of the airway mesh. The updated trainer keeps the blade image and the head visible during approach. A tracked crossing of the nominal lip opening switches to the interior. Withdrawal past the lips restores the exterior, and tracking loss clears passage state. The opening dimensions are prototype model parameters.
+
+Fourteen software tests passed. On the phone, starting practice at 9% scale kept the face over the QR. The head grew on approach and shrank on withdrawal. At close range the QR nearly filled the image. Switching to life size reproduced the reported outlined QR with no visible face at the same short working distance. The full exercise still needs a physical lip crossing with continuous tracking. No carton sweeps were run.

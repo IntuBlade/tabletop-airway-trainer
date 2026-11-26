@@ -143,6 +143,7 @@ struct LiveBladeMotion: View {
     @State private var practicing = false
     @State private var placedScale: TabletopScale?
     @State private var headFailed = false
+    @State private var passage = MouthPassage()
 
     var body: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 30, paused: phase != .active)) { _ in
@@ -156,6 +157,7 @@ struct LiveBladeMotion: View {
             let setupLens = frame?.setupPose.flatMap { pose in scale.map { $0.modelCamera(pose) } }
             let practiceLens = frame?.practicePose.flatMap { pose in scale.map { $0.modelCamera(pose) } }
             let camera = (station ?? placement.station).mouthFromCamera(referenceFromCamera: practiceLens)
+            let showInterior = inRep && camera != nil && (passage.inside || station != nil)
             let mouthVisible = setupLens.map { placement.mouthInFrame(markerFromLens: $0, aspect: Float(frame?.aspect ?? 1)) } ?? false
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
@@ -163,11 +165,11 @@ struct LiveBladeMotion: View {
                         .aspectRatio(frame?.aspect ?? 4/3, contentMode: .fit)
                         .overlay {
                             ZStack {
-                                if let frame, !inRep || camera == nil {
+                                if let frame, !showInterior {
                                     ZStack {
                                         Image(uiImage: frame.image).resizable()
                                             .accessibilityLabel("Live blade video")
-                                        if !inRep {
+                                        if station == nil {
                                             BladeHeadOverlay(base: placement.markerFromHead, camera: setupLens, failed: $headFailed)
                                                 .opacity(setupLens == nil ? 0 : 1)
                                             if let corners = frame.corners {
@@ -180,16 +182,22 @@ struct LiveBladeMotion: View {
                                 }
                                 if inRep {
                                     SyntheticAirwayCamera(mouthFromCamera: camera ?? matrix_identity_float4x4, useResearchScene: true)
-                                        .opacity(camera == nil ? 0 : 1)
+                                        .opacity(showInterior ? 1 : 0)
                                 }
                             }
                         }
                         .clipped()
                     Text(inRep ? "Blade view" : "Place head with blade").font(.headline)
                     if inRep {
-                        Text(camera == nil ? "Bring the whole QR back into the blade view." : "Move through the placed mouth. Recording is off.")
+                        if camera == nil {
+                            Text("Tracking paused. Bring the whole QR back into view.")
+                        } else if showInterior {
+                            Text("Inside the mouth. Withdraw past the lips to see the head again.")
+                        } else {
+                            Text("Approach the open mouth with the blade. Keep the QR visible.")
+                        }
                         if station == nil {
-                            Button("Return to setup") { practicing = false }
+                            Button("Return to setup") { practicing = false; passage = MouthPassage() }
                         }
                     } else {
                         if headFailed {
@@ -197,7 +205,11 @@ struct LiveBladeMotion: View {
                         } else if let frame {
                             Text(setupHint(frame, scale: scale, mouthVisible: mouthVisible))
                         }
-                        Button("Enter airway view") { practicing = true }
+                        Button("Start practice") {
+                            passage = MouthPassage()
+                            passage.observe(camera)
+                            practicing = true
+                        }
                             .disabled(headFailed || !mouthVisible || camera == nil).buttonStyle(.borderedProminent)
                         if let placedScale {
                             Button("Fit head to current view") { self.placedScale = nil }
@@ -207,6 +219,9 @@ struct LiveBladeMotion: View {
                         }
                     }
                 }.padding()
+            }
+            .onChange(of: frame?.practicePose == nil ? nil : frame?.captured) { _, _ in
+                if practicing { passage.observe(camera) }
             }
             .onChange(of: candidate, initial: true) { _, value in
                 if placedScale == nil, let value {

@@ -67,6 +67,7 @@ enum SquarePose {
 }
 
 enum TableStation {
+    static let lipsInScene = SIMD3<Float>(0, 0.077, 0.026)
     static let lipsOnHead = SIMD3<Float>(0, 0.135, 0.059)
 
     static func registration(worldFromImage: simd_float4x4, worldFromHeadBase: simd_float4x4) -> BladeRegistration {
@@ -75,7 +76,6 @@ enum TableStation {
         let worldFromMarker = worldFromImage * imageFromMarker
         // Nominal entry point on the setup shell, and corresponding lip midpoint
         // in the research renderer. These are model-space landmarks in meters.
-        let lipsInScene = SIMD3<Float>(0, 0.077, 0.026)
         let orientation = simd_quatf(angle: .pi, axis: SIMD3<Float>(0, 1, 0))
         var headFromScene = simd_float4x4(orientation)
         headFromScene.columns.3 = SIMD4(lipsOnHead - orientation.act(lipsInScene), 1)
@@ -160,5 +160,26 @@ struct TabletopScale: Equatable {
             if fits(mid) { low = mid } else { high = mid }
         }
         return Self(fraction: low)
+    }
+}
+
+/// The shell faces up the scene's Y axis. Track passage through its nominal
+/// lip opening; keep the interior visible if the lens turns after entry.
+struct MouthPassage {
+    private(set) var inside = false
+    private var previous: SIMD3<Float>?
+
+    mutating func observe(_ camera: simd_float4x4?) {
+        guard let camera else { self = Self(); return }
+        let tip = camera.columns.3.xyz - TableStation.lipsInScene
+        defer { previous = tip }
+        if inside {
+            if tip.y > 0.006 { inside = false }
+            return
+        }
+        guard let previous, previous.y > 0, tip.y <= 0, camera.columns.2.y > 0 else { return }
+        let crossing = previous + (tip - previous) * (previous.y / (previous.y - tip.y))
+        // Elliptical opening on the training shell, in model meters.
+        inside = simd_length_squared(SIMD2(crossing.x / 0.025, crossing.z / 0.018)) <= 1
     }
 }

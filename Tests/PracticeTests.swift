@@ -188,3 +188,29 @@ extension BladeRegistrationTests {
         XCTAssertNil(TabletopScale.fitting(lens, aspect: 4/3, placement: placement))
     }
 }
+
+extension BladeRegistrationTests {
+    func testPracticeKeepsExteriorUntilLensPassesBetweenLips() {
+        func lens(_ x: Float, _ height: Float) -> simd_float4x4 {
+            var m = simd_float4x4(simd_quatf(angle: -.pi / 2, axis: [1,0,0]))
+            m.columns.3 = SIMD4(TableStation.lipsInScene + SIMD3(x,height,0), 1)
+            return m
+        }
+        var gate = MouthPassage()
+        gate.observe(lens(0, 0.4))
+        XCTAssertFalse(gate.inside)
+        gate.observe(lens(0.05, 0.01))
+        gate.observe(lens(0.05, -0.01))
+        XCTAssertFalse(gate.inside)
+        gate.observe(lens(0, 0.015))
+        gate.observe(lens(0, -0.005))
+        XCTAssertTrue(gate.inside)
+        gate.observe(lens(0, 0.002))
+        XCTAssertTrue(gate.inside)
+        gate.observe(lens(0, 0.012))
+        XCTAssertFalse(gate.inside)
+        gate.observe(nil)
+        gate.observe(lens(0, -0.02))
+        XCTAssertFalse(gate.inside)
+    }
+}
