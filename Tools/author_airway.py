@@ -52,6 +52,11 @@ def color_labeled_tissue(mesh, manifest):
         raise ValueError("Expected the matching vertex-color airway source")
 
     region = block("region", "<f4").ravel()
+    # The tongue needs papillary relief while the epiglottis has a smooth
+    # wet film. Fade those differences continuously across label boundaries.
+    finishes = ("tongue", "epiglottis")
+    region_ids = {name: i for i, name in enumerate(landmarks["regions"])}
+    surface_masks = np.column_stack([region == region_ids.get(name, -1) for name in finishes])
     pigment = colors[:, :3].copy()
     for index, name in enumerate(landmarks["regions"]):
         selected = region == index
@@ -64,11 +69,16 @@ def color_labeled_tissue(mesh, manifest):
     mesh.edges.foreach_get("vertices", edges.ravel())
     src, dst = np.concatenate((edges, edges[:, ::-1])).T
     count = np.maximum(1, np.bincount(dst, minlength=len(colors)))[:, None]
+    pigment = np.column_stack((pigment, surface_masks))
     for _ in range(14):
         total = np.zeros_like(pigment)
         np.add.at(total, dst, pigment[src])
         pigment = 0.5 * (pigment + total / count)
-    colors[:, :3] = pigment
+    colors[:, :3] = pigment[:, :3]
+    masks = mesh.color_attributes.new("TissueFinish", "FLOAT_COLOR", "POINT")
+    packed = np.ones_like(colors)
+    packed[:, :2] = pigment[:, 3:]
+    masks.data.foreach_set("color", packed.ravel())
     attr.data.foreach_set("color", colors.ravel())
 
 
@@ -133,12 +143,40 @@ def create_material(mesh, labeled=False):
     link(pigment.outputs[0], surface.inputs["Base Color"])
     roughness = gradient("Moisture variation", variation("Moisture", 440, 2, 0.25),
                          (0.19,)*3, (0.41,)*3)
+    grain = variation("Fine grain", 1750, 2, 0.12)
+    if labeled:
+        masks = nodes.new("ShaderNodeVertexColor")
+        masks.layer_name = "TissueFinish"
+        channels = nodes.new("ShaderNodeSeparateColor")
+        link(masks.outputs["Color"], channels.inputs["Color"])
+
+        def blend(label, factor, first, second):
+            node = nodes.new("ShaderNodeMixRGB")
+            node.label = label
+            for slot, value in enumerate((factor, first, second)):
+                if isinstance(value, tuple):
+                    node.inputs[slot].default_value = value
+                else:
+                    link(value, node.inputs[slot])
+            return node.outputs[0]
+
+        # Uneven spacing and rounded peaks break up the tongue's moving highlight.
+        papillae = nodes.new("ShaderNodeTexVoronoi")
+        papillae.label = "Tongue papillae spacing"
+        papillae.inputs["Scale"].default_value = 1550
+        link(coords.outputs["Object"], papillae.inputs["Vector"])
+        relief = gradient("Rounded papillae", papillae.outputs["Distance"],
+                          (0.95,)*3, (0.10,)*3)
+        grain = blend("Tongue surface relief", channels.outputs["Red"], grain, relief)
+        wet = gradient("Broken wet film", variation("Wet film", 1150, 2, 0.3),
+                       (0.11,)*3, (0.28,)*3)
+        roughness = blend("Epiglottic film", channels.outputs["Green"], roughness, wet)
     link(roughness, surface.inputs["Roughness"])
     bump = nodes.new("ShaderNodeBump")
     bump.label = "Fine surface relief"
-    bump.inputs["Strength"].default_value = 0.22
-    bump.inputs["Distance"].default_value = 0.00012
-    link(variation("Fine grain", 1750, 2, 0.12), bump.inputs["Height"])
+    bump.inputs["Strength"].default_value = 0.48 if labeled else 0.22
+    bump.inputs["Distance"].default_value = 0.00019 if labeled else 0.00012
+    link(grain, bump.inputs["Height"])
     link(bump.outputs["Normal"], surface.inputs["Normal"])
     return material, pigment.outputs[0], roughness
 

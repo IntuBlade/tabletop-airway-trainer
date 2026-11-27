@@ -117,3 +117,11 @@ The optional Blender region input uses the source mesh’s tissue labels and che
 At the same 70 mm simulated advance, the median fold-edge sample moved from 9 display levels darker than neighboring mucosa to 21 levels lighter. The first clinical example measured 17 levels lighter. These are manually matched 7 × 7 pixel samples using weighted RGB brightness on a 0–255 scale. At 21 mm advance the area with all three channels at or above 245 fell from 22% to under 0.1%. These comparisons guided authoring. They do not establish clinical accuracy or reproduce the IntuBlade camera’s white balance.
 
 Fourteen software checks and USD validation passed. The signed staging app installed on the research iPhone with the verified model. The live appearance on the phone still needs review. The carton experiment remains on hold.
+
+### Keeping the tongue from filling the view during a centered advance
+
+Replayed the previous build through the middle of the practice rep. The blade camera approached the tongue closely enough to fill the frame and hide the landmarks. Sweeping the camera origin and its forward ray against the mesh every 0.1 mm through 70 mm of centered travel gave a minimum clearance of 1.31 mm and a minimum forward sightline of 2.54 mm. The revised guide gives 3.66 mm and 32.31 mm respectively. These figures describe this research mesh and a straight simulated advance. They do not measure physical tracking accuracy.
+
+The Blender material gives the tongue fine surface relief and the epiglottis a smoother wet finish. The simulated blade illumination now fades down the deep airway. A local 121-frame native replay compares the two signed-build configurations at identical blade inputs through advance, turning away, recovery and withdrawal. The revised render returns pixel-for-pixel to its starting view and to its glottic view after the turn.
+
+The [third university teaching clip](https://airway.umn.edu/node/126) shows an initially obscured opening, changes in tissue position with lift and pronounced loss of sharpness. The trainer still uses static geometry. Fourteen software checks and USD validation passed. The signed staging build with the verified asset installed on the research iPhone. The live blade rep and carton bench session were not run.

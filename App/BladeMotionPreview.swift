@@ -123,6 +123,14 @@ struct SyntheticAirwayCamera: UIViewRepresentable {
             camera.light?.type = .omni
             camera.light?.intensity = 700
         }
+        if usesBakedTissue {
+            // Limit the reach of the fill light down the open-ended research mesh.
+            let unlitAirway = UIColor(red: 0.050, green: 0.023, blue: 0.015, alpha: 1)
+            scene.background.contents = unlitAirway
+            scene.fogColor = unlitAirway
+            scene.fogStartDistance = 0.045
+            scene.fogEndDistance = 0.105
+        }
         camera.simdTransform = mouthFromCamera
         scene.rootNode.addChildNode(camera)
         view.pointOfView = camera

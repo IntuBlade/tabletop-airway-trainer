@@ -121,10 +121,11 @@ enum AirwayEntry {
     // Poses checked against the research mesh, from just past the incisors
     // to the throat. Advance is still driven by blade displacement in meters.
     private static let oralPath: [(depth: Float, pitch: Float, position: SIMD3<Float>)] = [
-        (0,     -1.18, [0, 0.060, 0.032]),
-        (0.021, -1.05, [0, 0.041, 0.024]),
-        (0.043, -0.60, [0, 0.020, 0.019]),
-        (0.059, -0.25, [0, 0.008, 0.008]),
+        (0,     -1.38, [0, 0.060, 0.032]),
+        (0.021, -1.36, [0, 0.041, 0.034]),
+        (0.043, -0.73, [0, 0.020, 0.028]),
+        (0.051, -0.49, [0, 0.011, 0.020]),
+        (0.059, -0.30, [0, 0.004, 0.010]),
         (0.070,  0,    [0, 0, 0]),
     ]
 

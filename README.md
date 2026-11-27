@@ -31,4 +31,6 @@ For a private single-mesh airway with vertex colors, [the Blender authoring scri
 python Tools/author_airway.py /path/to/original/PrivateAirway.usdz /path/to/private/output
 ```
 
+For regional tissue colors and surface finishes, add `--region-manifest /path/to/mesh.json`. The matching binary mesh and landmark labels must sit beside that manifest as `mesh.bin` and `mesh.landmarks.json`.
+
 Pass the exported `/path/to/private/output/PrivateAirway.usdz` as `TRAINER_RESEARCH_SCENE` when generating the blade-enabled project. Store the source mesh, generated textures, Blender scene and rendered previews in the private workspace.
