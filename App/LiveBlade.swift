@@ -117,8 +117,9 @@ final class TrainerBlade: NSObject, CameraDelegate, @unchecked Sendable {
             let observation = cg.map { self.tracker.update($0, at: now) }
             let report: TrackingStatus? = self.lock.withLock {
                 self.busy = false
-                guard self.generation == ticket.generation, let observation else { return nil }
-                self.frame = BladeFrame(image: image, observation: observation, captured: now)
+                guard self.generation == ticket.generation, let observation, let cg else { return nil }
+                // Display the exact frame passed to Vision in its pixel orientation.
+                self.frame = BladeFrame(image: UIImage(cgImage: cg), observation: observation, captured: now)
                 if observation.pose != nil { self.locked = observation }
                 self.analyzedCount += 1
                 guard now - self.lastReport >= 1 else { return nil }
@@ -126,7 +127,7 @@ final class TrainerBlade: NSObject, CameraDelegate, @unchecked Sendable {
                 return TrackingStatus(time: Date(), state: String(describing: observation.state),
                                       received: self.frameCount, analyzed: self.analyzedCount,
                                       lastAnalysisMS: Int((CACurrentMediaTime() - now) * 1000),
-                                      decodedQR: observation.detectedCorners != nil)
+                                      decodedQR: observation.detectedCorners != nil, evidence: observation.evidence)
             }
             report?.save()
 
@@ -170,6 +171,7 @@ private struct TrackingStatus: Encodable {
     let analyzed: Int
     let lastAnalysisMS: Int
     let decodedQR: Bool
+    let evidence: BladeSurfaceTracker.Evidence
 
     func save() {
         let url = URL.cachesDirectory.appending(path: "BladeTrackingStatus.json")
@@ -182,6 +184,7 @@ private struct TrackingStatus: Encodable {
 struct LiveBladeMotion: View {
     var station: BladeRegistration? = nil
     @Environment(\.scenePhase) private var phase
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var resetOrigin: (generation: Int, registration: BladeRegistration)?
     @AppStorage("blade-practice-qr-width-mm") private var printedWidth = TrainerMarker.standardWidthMM
     @State private var previousIdlePolicy: Bool?
@@ -211,45 +214,51 @@ struct LiveBladeMotion: View {
             let manual = resetOrigin.flatMap { $0.generation == sample.rep ? $0.registration : nil }
             let registration = station ?? manual ?? initial
             let trackedPose = registration?.mouthFromCamera(referenceFromCamera: observation?.pose)
-            let camera = station != nil ? trackedPose : trackedPose.map {
-                SyntheticAirwayCamera.bladeGuide?.camera(for: $0)
-                    ?? AirwayEntry.camera(for: $0, research: SyntheticAirwayCamera.hasResearchScene)
-            }
+            let camera = station != nil ? trackedPose : trackedPose.map(SyntheticAirwayCamera.practiceCamera(for:))
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
-                    Color.black
-                        .aspectRatio(frame?.aspect ?? 4/3, contentMode: .fit)
-                        .overlay {
-                            ZStack {
-                                if camera == nil {
-                                    if let frame {
-                                        Image(uiImage: frame.image).resizable()
-                                            .accessibilityLabel("Live blade video")
-                                        if let corners = frame.observation.detectedCorners {
-                                            MarkerOutline(corners: corners)
-                                        }
-                                    } else {
-                                        Text(sample.connection).foregroundStyle(.white)
-                                    }
-                                }
-                                if registration != nil {
-                                    SyntheticAirwayCamera(
-                                        mouthFromCamera: camera ?? matrix_identity_float4x4,
-                                        useResearchScene: true, trackingAvailable: camera != nil
-                                    )
-                                    .opacity(camera == nil ? 0 : 1)
-                                    .accessibilityHidden(camera == nil)
-                                }
+                    let panelLayout = typeSize.isAccessibilitySize
+                        ? AnyLayout(VStackLayout(alignment: .leading, spacing: 12))
+                        : AnyLayout(HStackLayout(alignment: .top, spacing: 8))
+                    panelLayout {
+                        diagnosticPanel("Airway", aspect: frame?.aspect ?? 4/3) {
+                            if registration != nil {
+                                SyntheticAirwayCamera(
+                                    mouthFromCamera: camera ?? matrix_identity_float4x4,
+                                    useResearchScene: true, trackingAvailable: camera != nil
+                                )
+                                .opacity(camera == nil ? 0 : 1)
+                                .accessibilityHidden(camera == nil)
+                            }
+                            if camera == nil {
+                                Text("Waiting for lock")
                             }
                         }
-                        .clipShape(.rect(cornerRadius: 14))
+                        diagnosticPanel("Blade camera", aspect: frame?.aspect ?? 4/3) {
+                            if let frame {
+                                Image(uiImage: frame.image)
+                                    .resizable()
+                                    .accessibilityLabel("Live blade video")
+                                if let corners = frame.observation.detectedCorners {
+                                    MarkerOutline(corners: corners)
+                                }
+                            } else {
+                                Text(sample.connection)
+                            }
+                        }
+                    }
+                    if let frame {
+                        Text((frame.observation.faces.isEmpty ? "" : frame.observation.faceNames + " · ") + frame.observation.evidence.rawValue)
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
                     if camera != nil {
                         if frame == nil {
                             Text("Blade video paused").font(.headline)
                             Text("Your rep is saved in place. Check the blade connection.")
                         } else if observation?.state == .held {
                             Text("Holding your view").font(.headline)
-                            Text("Aim back toward the same tabletop detail or the QR to resume blade motion.")
+                            Text(observation?.stationMode == true ? "Bring any station marker into view to resume." : "Aim back toward the same tabletop detail or the QR to resume blade motion.")
                         } else {
                             Text("Inside the mouth").font(.headline)
                             if SyntheticAirwayCamera.supportsTissueLift {
@@ -274,7 +283,7 @@ struct LiveBladeMotion: View {
                         Text("Waiting for blade video").font(.headline)
                     } else if frame?.observation.detectedCorners != nil {
                         Text("QR found").font(.headline)
-                        Text("Hold the blade steady while tracking locks.")
+                        Text(frame?.observation.evidence == .entryNeeded ? "Find the entry marker to start at the teeth." : "Hold the blade steady while tracking locks.")
                     } else if registration != nil {
                         Text("Tracking paused").font(.headline)
                         Text("Aim at the trainer QR to start blade tracking.")
@@ -343,6 +352,24 @@ struct LiveBladeMotion: View {
         }
     }
 
+    private func diagnosticPanel<Content: View>(
+        _ title: String, aspect: CGFloat, @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title).font(.caption.weight(.semibold))
+            Color.black
+                .aspectRatio(aspect, contentMode: .fit)
+                .overlay {
+                    ZStack(content: content)
+                        .font(.caption)
+                        .multilineTextAlignment(.center)
+                        .foregroundStyle(.white)
+                }
+                .clipShape(.rect(cornerRadius: 12))
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
     private func keepScreenAwake(_ active: Bool) {
         if active, previousIdlePolicy == nil {
             previousIdlePolicy = UIApplication.shared.isIdleTimerDisabled
@@ -367,6 +394,11 @@ private struct MarkerOutline: View {
             path.closeSubpath()
             context.stroke(path, with: .color(.black), lineWidth: 4)
             context.stroke(path, with: .color(.mint), lineWidth: 2)
+            for point in points {
+                let dot = Path(ellipseIn: CGRect(x: point.x - 3, y: point.y - 3, width: 6, height: 6))
+                context.stroke(dot, with: .color(.black), lineWidth: 2)
+                context.fill(dot, with: .color(.mint))
+            }
         }
         .accessibilityHidden(true)
     }

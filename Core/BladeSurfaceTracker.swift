@@ -115,15 +115,36 @@ private struct SurfaceImage {
 
 struct BladeSurfaceTracker {
     enum State { case acquiring, tracking, held }
+    enum Evidence: String, Encodable {
+        case awaitingAnalysis = "Waiting for analysis"
+        case stationPose = "Marker station pose accepted"
+        case stationRejected = "Marker station pose rejected"
+        case entryNeeded = "Scan the entry marker to anchor"
+        case qrPose = "QR pose accepted"
+        case surfacePose = "Surface pose accepted"
+        case qrRejected = "QR corners found • pose rejected"
+        case surfaceRejected = "Surface pose rejected"
+        case gathering = "QR corners found • settling"
+        case noMatch = "No reliable QR or surface match"
+    }
+
     struct Observation {
         let state: State
         let pose: simd_float4x4?
         let initialPose: simd_float4x4?
         let detectedCorners: [SIMD2<Double>]?
+        var evidence: Evidence = .awaitingAnalysis
 
+        var stationMode = false
+        var faces: [StationFace] = []
+
+        var faceNames: String {
+            var seen = Set<String>()
+            return faces.map(\.name).filter { seen.insert($0).inserted }.joined(separator: " + ")
+        }
         var held: Self? {
             guard let initialPose, let pose else { return nil }
-            return Self(state: .held, pose: pose, initialPose: initialPose, detectedCorners: nil)
+            return Self(state: .held, pose: pose, initialPose: initialPose, detectedCorners: nil, stationMode: stationMode)
         }
     }
     private struct Reference {
@@ -136,6 +157,8 @@ struct BladeSurfaceTracker {
     private var filter = BladePoseFilter()
     private var initialPose: simd_float4x4?
     private var lastPose: simd_float4x4?
+    private var stationMode = false
+    private var entrySample: (pose: simd_float4x4, time: Double, count: Int)?
     private var preferDirectFix = false
     private var nextDecode = -Double.infinity
     private var qrReference: Reference?
@@ -144,12 +167,54 @@ struct BladeSurfaceTracker {
 
     init(widthMM: Double, resume: Observation? = nil) {
         self.widthMM = widthMM
+        stationMode = resume?.stationMode ?? false
         initialPose = resume?.initialPose
         lastPose = resume?.pose
         sequence = MarkerSequence(widthMM: widthMM, acquisitionGap: 1.0)
     }
 
+    private mutating func stationUpdate(_ hits: [StationDetection], at time: Double) -> Observation {
+        var evidence: Evidence = hits.isEmpty ? .noMatch : .stationRejected
+        var accepted: simd_float4x4?
+        if initialPose == nil && !hits.contains(where: { $0.face == .entry }) {
+            evidence = .entryNeeded
+            entrySample = nil
+        } else if let pose = StationPose.solve(hits) {
+            if initialPose == nil {
+                let consistent = entrySample.map {
+                    time > $0.time && time - $0.time <= 1 &&
+                    simd_distance(pose.columns.3, $0.pose.columns.3) < 0.008 &&
+                    abs(simd_dot(simd_quatf(pose).vector, simd_quatf($0.pose).vector)) > 0.996
+                } ?? false
+                let count = consistent ? (entrySample?.count ?? 0) + 1 : 1
+                entrySample = (pose, time, count)
+                evidence = .gathering
+                if count >= 3 { initialPose = pose; stationMode = true }
+            }
+            if initialPose != nil { accepted = pose; evidence = .stationPose }
+        } else {
+            entrySample = nil
+        }
+        let filtered = filter.update(accepted, at: time)
+        if let filtered { lastPose = filtered }
+        return Observation(state: filtered != nil ? .tracking : (lastPose == nil ? .acquiring : .held),
+                           pose: lastPose, initialPose: initialPose, detectedCorners: hits.first?.corners,
+                           evidence: evidence, stationMode: stationMode, faces: hits.map(\.face))
+    }
+
     mutating func update(_ image: CGImage, at time: Double) -> Observation {
+        // After a legacy lock, its surface tracker owns the decode cadence.
+        // A station lock must examine every image for newly visible faces.
+        let inspectStation = stationMode || initialPose == nil
+        let decoded = inspectStation ? try? TrainerMarker.detections(in: image) : nil
+        func legacyCorners() -> [SIMD2<Double>]? {
+            inspectStation ? decoded?.legacy : try? TrainerMarker.corners(in: image)
+        }
+        let faces = decoded?.station ?? []
+        if stationMode || (initialPose == nil && !faces.isEmpty) {
+            return stationUpdate(faces, at: time)
+        }
+        entrySample = nil
         let surface = SurfaceImage(image)
         var detected: [SIMD2<Double>]?
         var corners: [SIMD2<Double>]?
@@ -161,7 +226,7 @@ struct BladeSurfaceTracker {
             return estimate
         }
         let triedQRFirst = preferDirectFix && time >= nextDecode
-        if triedQRFirst { detected = try? TrainerMarker.corners(in: image) }
+        if triedQRFirst { detected = legacyCorners() }
         corners = detected ?? transfer(reference)
         // Revisit the original textured image to remove incremental drift. This
         // does not require the printed symbol to decode or even be in the frame.
@@ -175,7 +240,7 @@ struct BladeSurfaceTracker {
         }
         let needsQRRetry = corners == nil && !triedQRFirst && time >= nextDecode
         if needsQRRetry {
-            detected = try? TrainerMarker.corners(in: image)
+            detected = legacyCorners()
             corners = detected
         }
         if triedQRFirst || needsQRRetry {
@@ -199,9 +264,20 @@ struct BladeSurfaceTracker {
                     usingLocalReference = true
                 }
             }
-            return Observation(state: .tracking, pose: pose, initialPose: initialPose, detectedCorners: detected)
+            return Observation(state: .tracking, pose: pose, initialPose: initialPose, detectedCorners: detected,
+                               evidence: detected == nil ? .surfacePose : .qrPose)
+        }
+        let evidence: Evidence
+        if let corners {
+            if TrainerMarker.solve(corners, widthMM: widthMM) == nil {
+                evidence = detected == nil ? .surfaceRejected : .qrRejected
+            } else {
+                evidence = .gathering
+            }
+        } else {
+            evidence = .noMatch
         }
         return Observation(state: lastPose == nil ? .acquiring : .held, pose: lastPose,
-                           initialPose: initialPose, detectedCorners: detected)
+                           initialPose: initialPose, detectedCorners: detected, evidence: evidence)
     }
 }

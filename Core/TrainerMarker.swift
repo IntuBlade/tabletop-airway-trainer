@@ -46,18 +46,25 @@ enum TrainerMarker {
     }
 
     static func corners(in image: CGImage) throws -> [SIMD2<Double>]? {
+        try detections(in: image).legacy
+    }
+
+    static func detections(in image: CGImage) throws -> (legacy: [SIMD2<Double>]?, station: [StationDetection]) {
         let request = VNDetectBarcodesRequest()
         request.symbologies = [.qr]
         try VNImageRequestHandler(cgImage: image).perform([request])
-        let matches = (request.results ?? []).filter { $0.payloadStringValue == payload }
-        guard matches.count == 1, let qr = matches.first else { return nil }
-        // Nominal optics and marker size for an explicitly uncalibrated motion preview.
         let w = Double(image.width), h = Double(image.height)
         let focal = w / (2 * halfWidthAtUnitDepth)
-        let corners = [qr.topLeft, qr.topRight, qr.bottomRight, qr.bottomLeft].map {
-            SIMD2<Double>(($0.x - 0.5) * w / focal, (0.5 - $0.y) * h / focal)
+        let groups = Dictionary(grouping: request.results ?? []) { $0.payloadStringValue ?? "" }
+        func quad(_ id: String) -> [SIMD2<Double>]? {
+            guard let matches = groups[id], matches.count == 1, let qr = matches.first else { return nil }
+            return [qr.topLeft, qr.topRight, qr.bottomRight, qr.bottomLeft].map {
+                SIMD2<Double>(($0.x - 0.5) * w / focal, (0.5 - $0.y) * h / focal)
+            }
         }
-        return corners
+        return (quad(payload), StationFace.allCases.compactMap { face in
+            quad(face.rawValue).map { StationDetection(face: face, corners: $0) }
+        })
     }
 }
 

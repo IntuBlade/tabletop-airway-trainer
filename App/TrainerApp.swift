@@ -17,7 +17,9 @@ let trainerTint = Color(uiColor: UIColor { traits in
     var body: some Scene {
         WindowGroup {
             #if DEBUG && canImport(BaseCamera)
-            if ProcessInfo.processInfo.arguments.contains("--blade-setup") {
+            if ProcessInfo.processInfo.arguments.contains("--station-replay") {
+                NavigationStack { StationReplayView() }
+            } else if ProcessInfo.processInfo.arguments.contains("--blade-setup") {
                 NavigationStack { LiveBladeMotion() }
             } else {
                 TrainerHome()
@@ -60,6 +62,10 @@ private struct TrainerHome: View {
                                 .frame(maxWidth: .infinity, minHeight: 44)
                         }.buttonStyle(.borderedProminent).tint(trainerActionFill)
                         #endif
+                        NavigationLink { StationReplayView() } label: {
+                            Label("Play marker replay", systemImage: "play.square.stack")
+                                .frame(maxWidth: .infinity, minHeight: 44)
+                        }.buttonStyle(.bordered)
                         NavigationLink {
                             RecordedPractice { rep in
                                 if let data = try? JSONEncoder().encode(Array(([rep] + history).prefix(2))) {

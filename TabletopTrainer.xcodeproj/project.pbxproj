@@ -16,7 +16,10 @@
 		53E6B9802230939305332DA5 /* AirwayFrame.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7A9D03EF387C45153A13620 /* AirwayFrame.swift */; };
 		57C3DE6D9C307D47F5D448CC /* BladeRegistration.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3A87686C743088163823A70 /* BladeRegistration.swift */; };
 		63A2E8575AC78D40C291E8FA /* TrainerMarker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88F297B4C450C03C68C53B53 /* TrainerMarker.swift */; };
+		3586115A94FADCDE808BEA51 /* MarkerStation.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA2373FA65DA5B53DC17A1F0 /* MarkerStation.swift */; };
+		3CE05A0BD98BE452A6B8F081 /* StationReplay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CC56C037DB0673704540B81 /* StationReplay.swift */; };
 		7AC4A068DF665D8499F9F6BE /* TrainerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80EBF4655768DD5CD5CD505E /* TrainerApp.swift */; };
+		3E3A75E16261B3718A78AAAA /* StationReplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AFF1F6EF71CE51ECAAA43C2 /* StationReplayView.swift */; };
 		7CDF30330374CF3FE78D86EF /* Practice.swift in Sources */ = {isa = PBXBuildFile; fileRef = C08C7099848F6906FC750ECA /* Practice.swift */; };
 		9E8FE1F9ACA018AA8773A677 /* TissueLift.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4999964387348B6FEDF0A88F /* TissueLift.swift */; };
 		B73E4F33A86C438AABC87253 /* BladeSurfaceTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B40460C40614E4FBB3C5FEE /* BladeSurfaceTracker.swift */; };
@@ -46,7 +49,10 @@
 		6E6DBA798808C7BEA38A1149 /* TabletopTrainer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TabletopTrainer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7E9F2B4899832751DA250095 /* TrainerWorkflowTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TrainerWorkflowTests.swift; sourceTree = "<group>"; };
 		80EBF4655768DD5CD5CD505E /* TrainerApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TrainerApp.swift; sourceTree = "<group>"; };
+		0AFF1F6EF71CE51ECAAA43C2 /* StationReplayView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StationReplayView.swift; sourceTree = "<group>"; };
 		88F297B4C450C03C68C53B53 /* TrainerMarker.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TrainerMarker.swift; sourceTree = "<group>"; };
+		AA2373FA65DA5B53DC17A1F0 /* MarkerStation.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MarkerStation.swift; sourceTree = "<group>"; };
+		2CC56C037DB0673704540B81 /* StationReplay.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StationReplay.swift; sourceTree = "<group>"; };
 		892058C57C9826FCF4CD1AE7 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		B2CBF00C84A071AE5023C566 /* TrainerWorkflowTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TrainerWorkflowTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B9E7F84D68E581A39C10A6BD /* RecordedPractice.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RecordedPractice.swift; sourceTree = "<group>"; };
@@ -102,6 +108,7 @@
 				B9E7F84D68E581A39C10A6BD /* RecordedPractice.swift */,
 				2E078C8B59BD3CB811BD60A4 /* TablePlacement.swift */,
 				80EBF4655768DD5CD5CD505E /* TrainerApp.swift */,
+				0AFF1F6EF71CE51ECAAA43C2 /* StationReplayView.swift */,
 				14558430A881B70C43F64605 /* Assets.xcassets */,
 				02431413B2A011B36352F529 /* BladeMotionPreview.swift */,
 				E1D353A0F6CBD1CBE54B26A0 /* LiveBlade.swift */,
@@ -133,6 +140,8 @@
 				C08C7099848F6906FC750ECA /* Practice.swift */,
 				C3A87686C743088163823A70 /* BladeRegistration.swift */,
 				88F297B4C450C03C68C53B53 /* TrainerMarker.swift */,
+				AA2373FA65DA5B53DC17A1F0 /* MarkerStation.swift */,
+				2CC56C037DB0673704540B81 /* StationReplay.swift */,
 				4999964387348B6FEDF0A88F /* TissueLift.swift */,
 				4B40460C40614E4FBB3C5FEE /* BladeSurfaceTracker.swift */,
 			);
@@ -258,11 +267,14 @@
 				FA36EEE5570B4DF21AAA13D0 /* RecordedPractice.swift in Sources */,
 				32A9728A68B2798A42960F62 /* TablePlacement.swift in Sources */,
 				7AC4A068DF665D8499F9F6BE /* TrainerApp.swift in Sources */,
+				3E3A75E16261B3718A78AAAA /* StationReplayView.swift in Sources */,
 				7CDF30330374CF3FE78D86EF /* Practice.swift in Sources */,
 				1C3B75DDAB55F05D0A9A220C /* BladeMotionPreview.swift in Sources */,
 				57C3DE6D9C307D47F5D448CC /* BladeRegistration.swift in Sources */,
 				AC66FE55CFDFEC645B907F25 /* LiveBlade.swift in Sources */,
 				63A2E8575AC78D40C291E8FA /* TrainerMarker.swift in Sources */,
+				3586115A94FADCDE808BEA51 /* MarkerStation.swift in Sources */,
+				3CE05A0BD98BE452A6B8F081 /* StationReplay.swift in Sources */,
 				9E8FE1F9ACA018AA8773A677 /* TissueLift.swift in Sources */,
 				B73E4F33A86C438AABC87253 /* BladeSurfaceTracker.swift in Sources */,
 			);

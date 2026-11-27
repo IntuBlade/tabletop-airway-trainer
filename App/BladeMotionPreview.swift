@@ -60,6 +60,10 @@ struct SyntheticAirwayCamera: UIViewRepresentable {
 
     static let bladeGuide = researchScene.flatMap { PairedBladePath(root: $0.rootNode) }
 
+    static func practiceCamera(for movement: simd_float4x4) -> simd_float4x4 {
+        bladeGuide?.camera(for: movement) ?? AirwayEntry.camera(for: movement, research: hasResearchScene)
+    }
+
     static let supportsTissueLift = researchScene.flatMap {
         AirwayLiftRig(root: $0.rootNode.clone(), guide: bladeGuide)
     } != nil
