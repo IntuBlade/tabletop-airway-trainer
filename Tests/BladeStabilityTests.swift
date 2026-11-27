@@ -1,4 +1,5 @@
 import XCTest
+import SceneKit
 import simd
 @testable import TrainerCore
 
@@ -95,6 +96,51 @@ final class TissueLiftTests: XCTestCase {
             movement.columns.3.z = -Float(mm) / 1000
             XCTAssertEqual(contact.weight(for: AirwayEntry.camera(for: movement, research: true)), 0)
         }
+    }
+}
+
+final class PairedBladePathTests: XCTestCase {
+    func testRotatingLensCarriesItsTipThroughSeatingLiftAndRelease() throws {
+        let root = SCNNode()
+        let group = SCNNode()
+        group.name = "BladeGuide"
+        root.addChildNode(group)
+        func marker(_ name: String, _ point: SIMD3<Float>, pitch: Float = 0) {
+            let node = SCNNode()
+            node.name = name
+            node.simdOrientation = simd_quatf(angle: pitch, axis: [1,0,0])
+            node.simdPosition = point
+            group.addChildNode(node)
+        }
+        let tip = SIMD3<Float>(0.003, 0.008, -0.044)
+        let seat = SIMD3<Float>(0, 0, -0.022)
+        marker("TipInLens", tip)
+        marker("EntryLens", [0, 0.05, 0.03], pitch: -1)
+        marker("MiddleTip", [0.002, 0.010, -0.005])
+        marker("SeatedTip", seat)
+        XCTAssertNil(PairedBladePath(root: root))
+        marker("RaisedTip", seat + [0, 0.012, 0])
+        let guide = try XCTUnwrap(PairedBladePath(root: root))
+        let contact = TissueLiftContact(pocket: seat, axis: [0,1,0], tipInLens: tip, fullLift: guide.fullLift)
+        let entry = guide.camera(for: matrix_identity_float4x4)
+        XCTAssertLessThan(simd_distance(entry.columns.3.xyz, guide.entryLens.columns.3.xyz), 1e-6)
+        var movement = matrix_identity_float4x4
+        movement.columns.3.z = -guide.advanceMeters
+        let seated = guide.camera(for: movement)
+        XCTAssertLessThan(simd_distance((seated * SIMD4(tip, 1)).xyz, seat), 1e-6)
+        XCTAssertEqual(contact.weight(for: seated), 0)
+        movement.columns.3.y = guide.fullLift
+        let raised = guide.camera(for: movement)
+        XCTAssertEqual(contact.weight(for: raised), 1, accuracy: 1e-5)
+        let rotation = simd_float4x4(simd_quatf(angle: 0.6, axis: [0,1,0]))
+        let turned = guide.camera(for: movement * rotation)
+        XCTAssertLessThan(simd_distance(turned.columns.3, raised.columns.3), 1e-6)
+        XCTAssertEqual(contact.weight(for: turned), 0)
+        XCTAssertEqual(contact.weight(for: nil), 0)
+        XCTAssertEqual(contact.weight(for: guide.camera(for: movement)), 1, accuracy: 1e-5)
+        movement.columns.3.z -= 0.018
+        XCTAssertEqual(contact.weight(for: guide.camera(for: movement)), 0)
+        XCTAssertEqual(guide.camera(for: matrix_identity_float4x4).columns.3, entry.columns.3)
     }
 }
 

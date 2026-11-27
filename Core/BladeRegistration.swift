@@ -19,7 +19,7 @@ struct BladeRegistration {
         return referenceFromMouth.inverse * referenceFromCamera
     }
 
-    fileprivate static func isRigid(_ m: simd_float4x4) -> Bool {
+    static func isRigid(_ m: simd_float4x4) -> Bool {
         let r = simd_float3x3(columns: (m.columns.0.xyz, m.columns.1.xyz, m.columns.2.xyz))
         let identity = r.transpose * r - matrix_identity_float3x3
         return m.columns.3.xyz.allFinite && abs(m.columns.3.w - 1) < 0.0001
@@ -29,7 +29,7 @@ struct BladeRegistration {
     }
 }
 
-private extension SIMD4 where Scalar == Float {
+extension SIMD4 where Scalar == Float {
     var xyz: SIMD3<Float> { [x, y, z] }
 }
 private extension SIMD3 where Scalar == Float {

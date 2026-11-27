@@ -151,3 +151,11 @@ The partial lift now rolls the epiglottic rim and compresses the tongue base. Th
 Two 121-frame native replays, one with the lens held still and one with simulated blade motion, returned exactly to their initial frames. The clinical comparison still shows a sharper, brighter simulated epiglottic edge. The physical assembly audit also found a discrepancy between the design tip and the training contact point. The current rep uses a simulated contact point. Physical calibration and educator review remain open. Clinical reference: [University of Minnesota, third intubation example](https://airway.umn.edu/node/126).
 
 All 18 software tests passed. The signed research build with the verified asset installed and launched on the iPhone. Hands-on performance of this revision has yet to be established.
+
+### Registering the blade view and contact tip together
+
+The previous guide placed the lens along one path and tested contact using a short virtual tip. We fitted a paired path against the research airway using the mechanical camera window and distal tip from the same source blade assembly. The entry pose starts the lens at the teeth. At the other end, the tip seats on the resting vallecula. The lens position follows from the same rigid offset used to drive tissue motion. The learner can turn away, lose contact and return.
+
+The first candidate placed the tip inside the resting tissue. We traced the displaced surface and checked both ends of the blade through the approach. A 181-frame native replay showed the opening on lift, lost it on turning away and recovered the identical view on recentering. Release and withdrawal also returned to their matching frames. All 19 software tests passed. The signed standalone research update installed on the iPhone. The replay measures the authored path. Sensor roll, optical calibration, whole-blade clearance and hands-on performance remain open.
+
+The public tooling binds a private profile to the exact airway export by hash. The blade measurements, engineering files and private airway stay in the research workspace.

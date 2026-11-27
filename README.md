@@ -37,4 +37,12 @@ For the studio pass, install the Blender authoring add-ons [Ucupaint](https://gi
 
 If that mesh provides a lift field and vallecula landmark, the live renderer also responds to tracked blade elevation near the pocket. Lowering or withdrawing the blade releases the tissue. This is a pose-driven training approximation.
 
+A measured blade profile can register the camera path and contact tip together on a particular studio export. Run the registration step before generating the local research project.
+
+```sh
+python Tools/register_blade.py private/studio/PrivateAirway.usdz private/blade-guide.json private/registered/PrivateAirway.usdz
+```
+
+The profile names the source package by `airway_sha256`. Supply `tip_in_lens_m` in lens coordinates, with forward along −Z. In airway space supply `entry_lens_m`, `middle_tip_m`, `seated_tip_m` on the resting pocket and `raised_tip_m` along its lift axis. Supply unit lens quaternions `entry_wxyz` and `seated_wxyz` in scalar-first order. The trainer derives lens travel from the resulting curve. It carries one rigid lens-to-tip offset through advance, rotation, lift and withdrawal. Older research assets continue to use their existing path.
+
 Pass the exported `/path/to/private/output/PrivateAirway.usdz` as `TRAINER_RESEARCH_SCENE` when generating the blade-enabled project. Store the source mesh, generated textures, Blender scene and rendered previews in the private workspace.

@@ -58,8 +58,10 @@ struct SyntheticAirwayCamera: UIViewRepresentable {
         .flatMap { try? SCNScene(url: $0, options: nil) }
     static var hasResearchScene: Bool { researchScene != nil }
 
+    static let bladeGuide = researchScene.flatMap { PairedBladePath(root: $0.rootNode) }
+
     static let supportsTissueLift = researchScene.flatMap {
-        AirwayLiftRig(root: $0.rootNode.clone())
+        AirwayLiftRig(root: $0.rootNode.clone(), guide: bladeGuide)
     } != nil
 
     func makeUIView(context: Context) -> SCNView {
@@ -83,7 +85,7 @@ struct SyntheticAirwayCamera: UIViewRepresentable {
         if useResearchScene, let model = Self.researchScene {
             let airway = model.rootNode.clone()
             scene.rootNode.addChildNode(airway)
-            context.coordinator.lift = AirwayLiftRig(root: airway)
+            context.coordinator.lift = AirwayLiftRig(root: airway, guide: Self.bladeGuide)
             scene.rootNode.enumerateChildNodes { node, _ in
                 for material in node.geometry?.materials ?? [] {
                     material.isDoubleSided = true

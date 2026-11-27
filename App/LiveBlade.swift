@@ -160,7 +160,8 @@ struct LiveBladeMotion: View {
             let registration = station ?? origin
             let trackedPose = registration?.mouthFromCamera(referenceFromCamera: frame?.practicePose)
             let camera = station != nil ? trackedPose : trackedPose.map {
-                AirwayEntry.camera(for: $0, research: SyntheticAirwayCamera.hasResearchScene)
+                SyntheticAirwayCamera.bladeGuide?.camera(for: $0)
+                    ?? AirwayEntry.camera(for: $0, research: SyntheticAirwayCamera.hasResearchScene)
             }
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
