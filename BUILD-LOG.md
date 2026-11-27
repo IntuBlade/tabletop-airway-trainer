@@ -159,3 +159,9 @@ The previous guide placed the lens along one path and tested contact using a sho
 The first candidate placed the tip inside the resting tissue. We traced the displaced surface and checked both ends of the blade through the approach. A 181-frame native replay showed the opening on lift, lost it on turning away and recovered the identical view on recentering. Release and withdrawal also returned to their matching frames. All 19 software tests passed. The signed standalone research update installed on the iPhone. The replay measures the authored path. Sensor roll, optical calibration, whole-blade clearance and hands-on performance remain open.
 
 The public tooling binds a private profile to the exact airway export by hash. The blade measurements, engineering files and private airway stay in the research workspace.
+
+### Keeping the rep when the QR leaves the blade view
+
+A missed QR detection used to hide the anatomy immediately. Blade practice now saves the first lock and follows overlapping detail on the flat practice surface. It validates the estimated motion against textured patches across the image. If the view becomes blank or the match is unreliable, the airway and its lift stay at the last measured pose. Returning to recognizable detail or the original QR resumes the same rep.
+
+The regression replay starts with a small printed QR, moves it completely out of frame, changes scale, blanks the image and returns to the surface at a different position while the QR remains outside the frame. The tracker held the exact pose through the blank interval and recovered the new position within the fixture’s 8 mm tolerance. All 20 software tests passed. The signed standalone update installed and launched on the research iPhone. Physical blade performance depends on the visible surface detail and remains to be checked by hand.
