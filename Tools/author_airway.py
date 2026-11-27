@@ -5,6 +5,8 @@ The input must be the meter-scale single-mesh airway with vertex displayColor.
 Only the material and UVs are added to the original USD geometry.
 """
 import argparse
+import hashlib
+import json
 from pathlib import Path
 import re
 import subprocess
@@ -13,7 +15,64 @@ import bpy
 import numpy as np
 
 
-def create_material(mesh):
+# Linear-light diffuse colors. The glottic margins have lower chroma than the
+# adjoining mucosa in both clinical comparison recordings.
+REGIONAL_COLORS = {
+    "tongue": (0.63, 0.17, 0.12),
+    "palate": (0.62, 0.19, 0.14),
+    "gums": (0.55, 0.12, 0.09),
+    "pharynx": (0.67, 0.19, 0.13),
+    "epiglottis": (0.69, 0.25, 0.15),
+    "larynx": (0.64, 0.19, 0.13),
+    "cords": (0.58, 0.44, 0.28),
+}
+
+
+def color_labeled_tissue(mesh, manifest):
+    """Read a mesh's own labels. Require matching topology and vertex colors."""
+    meta = json.loads(manifest.read_text())
+    landmarks = json.loads(manifest.with_suffix(".landmarks.json").read_text())
+    raw = manifest.with_suffix(".bin").read_bytes()
+    if hashlib.sha256(raw).hexdigest() != meta["sha256"] or meta["sha256"] != landmarks["mesh_sha256"]:
+        raise ValueError("Region and geometry files must describe the same mesh")
+
+    def block(key, dtype):
+        field = meta["layout"][key]
+        return np.frombuffer(raw, dtype, field["count"], field["offset"]).reshape(-1, field["item_size"])
+
+    indices = np.empty(len(mesh.loops), dtype=np.int32)
+    mesh.loops.foreach_get("vertex_index", indices)
+    if not np.array_equal(indices, block("index", "<u4").ravel()):
+        raise ValueError("Region mesh differs from imported mesh")
+
+    attr = mesh.color_attributes["displayColor"]
+    colors = np.empty((len(attr.data), 4), dtype=np.float32)
+    attr.data.foreach_get("color", colors.ravel())
+    if attr.domain != "POINT" or not np.allclose(colors[:, :3], block("color", "<f4"), atol=1e-5):
+        raise ValueError("Expected the matching vertex-color airway source")
+
+    region = block("region", "<f4").ravel()
+    pigment = colors[:, :3].copy()
+    for index, name in enumerate(landmarks["regions"]):
+        selected = region == index
+        if name in REGIONAL_COLORS and np.any(selected):
+            local = pigment[selected]
+            pigment[selected] = np.clip(local / np.median(local, axis=0) * REGIONAL_COLORS[name], 0, 1)
+
+    # Feather across neighboring triangles, including the edges of the cord labels.
+    edges = np.empty((len(mesh.edges), 2), dtype=np.int32)
+    mesh.edges.foreach_get("vertices", edges.ravel())
+    src, dst = np.concatenate((edges, edges[:, ::-1])).T
+    count = np.maximum(1, np.bincount(dst, minlength=len(colors)))[:, None]
+    for _ in range(14):
+        total = np.zeros_like(pigment)
+        np.add.at(total, dst, pigment[src])
+        pigment = 0.5 * (pigment + total / count)
+    colors[:, :3] = pigment
+    attr.data.foreach_set("color", colors.ravel())
+
+
+def create_material(mesh, labeled=False):
     material = bpy.data.materials.new("Mucosa")
     material.use_nodes = True
     mesh.materials.clear()
@@ -53,6 +112,23 @@ def create_material(mesh):
     pigment.blend_type = "MULTIPLY"
     pigment.inputs[0].default_value = 1
     link(base.outputs["Color"], pigment.inputs[1])
+    if labeled:
+        # A narrow band in distorted surface noise gives irregular streaks at
+        # millimeter scale. Their pigment stays on the mesh during withdrawal.
+        streak = nodes.new("ShaderNodeValToRGB")
+        streak.label = "Subsurface color streaks"
+        ramp = streak.color_ramp
+        ramp.elements[0].color = (1, 1, 1, 1)
+        ramp.elements[1].color = (1, 1, 1, 1)
+        for position, rgb in [(0.41, (1, 1, 1)), (0.455, (0.86, 0.60, 0.65)), (0.49, (1, 1, 1))]:
+            ramp.elements.new(position).color = (*rgb, 1)
+        link(variation("Fine vascular variation", 235, 2, 0.75), streak.inputs[0])
+        mix = nodes.new("ShaderNodeMixRGB")
+        mix.blend_type = "MULTIPLY"
+        mix.inputs[0].default_value = 0.7
+        link(tone, mix.inputs[1])
+        link(streak.outputs[0], mix.inputs[2])
+        tone = mix.outputs[0]
     link(tone, pigment.inputs[2])
     link(pigment.outputs[0], surface.inputs["Base Color"])
     roughness = gradient("Moisture variation", variation("Moisture", 440, 2, 0.25),
@@ -153,6 +229,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("source", type=Path)
     parser.add_argument("output", type=Path)
+    parser.add_argument("--region-manifest", type=Path, help="Matching mesh JSON beside its .bin and .landmarks.json")
     args = parser.parse_args()
     out = args.output.resolve()
     out.mkdir(parents=True, exist_ok=True)
@@ -167,7 +244,9 @@ def main():
     bpy.ops.mesh.select_all(action="SELECT")
     bpy.ops.uv.smart_project(angle_limit=1.35, island_margin=0.003)
     bpy.ops.object.mode_set(mode="OBJECT")
-    material, pigment, roughness = create_material(obj.data)
+    if args.region_manifest:
+        color_labeled_tissue(obj.data, args.region_manifest)
+    material, pigment, roughness = create_material(obj.data, labeled=bool(args.region_manifest))
     bpy.context.preferences.filepaths.save_version = 0
     bpy.ops.wm.save_as_mainfile(filepath=str(out / "Airway.blend"))
     bake(material, pigment, roughness, out)

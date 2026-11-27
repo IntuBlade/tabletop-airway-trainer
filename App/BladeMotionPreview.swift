@@ -110,13 +110,13 @@ struct SyntheticAirwayCamera: UIViewRepresentable {
             lamp.light?.attenuationStartDistance = 0.018
             lamp.light?.attenuationEndDistance = 0.16
             // The calibrated PBR lamp operates a few millimeters from the surface.
-            lamp.light?.intensity = usesBakedTissue ? 0.0045 : 1100
+            lamp.light?.intensity = usesBakedTissue ? 0.0026 : 1100
             camera.addChildNode(lamp)
 
             let fill = SCNNode()
             fill.light = SCNLight()
             fill.light?.type = .ambient
-            fill.light?.intensity = usesBakedTissue ? 35 : 100
+            fill.light?.intensity = usesBakedTissue ? 180 : 100
             scene.rootNode.addChildNode(fill)
         } else {
             camera.light = SCNLight()

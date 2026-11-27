@@ -107,3 +107,13 @@ The research renderer now uses a blade-mounted light with distance falloff and s
 Blender 4.2 unwrapped the research mesh and baked three 2048 × 2048 maps for tissue color, surface roughness and fine relief. Color variation is anchored to the surface and uses the original vertex colors. The iPhone renderer loads the authored material and uses a calibrated near-field light for it. Native renders at matching camera poses exposed overexposure and dark UV borders during development.
 
 Compared the original and exported USD geometry arrays, including every vertex, face index and source normal. USD validation passed. The signed staging app contains the verified USDZ and installed on the research iPhone. All fourteen trainer software checks passed. The comparison frames and motion preview were rendered locally. Physical blade performance and the appearance relative to real blade footage still need review.
+
+### Comparing the airway surface with clinical video
+
+Reviewed the first two [University of Minnesota routine intubation videos](https://airway.umn.edu/node/126) at the tongue sweep, epiglottis and glottic opening. The two cameras show different color balances. In the first example at 26.14 seconds the fold margin is lighter and less red than adjacent tissue. The previous simulation reversed that local brightness relationship. The second example at 9.41 seconds shows streaks of deeper color across the epiglottis with small wet highlights.
+
+The optional Blender region input uses the source mesh’s tissue labels and checks its hash, triangle indices and vertex colors before painting. The cord margin now has a muted ivory pigment, the pharynx warmer mucosa and the epiglottis a warmer edge. Neighboring vertex colors blend at boundaries. Fine color variation is fixed to the surface. Lower blade-light intensity and more fill preserve tissue detail on close approach.
+
+At the same 70 mm simulated advance, the median fold-edge sample moved from 9 display levels darker than neighboring mucosa to 21 levels lighter. The first clinical example measured 17 levels lighter. These are manually matched 7 × 7 pixel samples using weighted RGB brightness on a 0–255 scale. At 21 mm advance the area with all three channels at or above 245 fell from 22% to under 0.1%. These comparisons guided authoring. They do not establish clinical accuracy or reproduce the IntuBlade camera’s white balance.
+
+Fourteen software checks and USD validation passed. The signed staging app installed on the research iPhone with the verified model. The live appearance on the phone still needs review. The carton experiment remains on hold.
