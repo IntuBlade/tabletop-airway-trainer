@@ -68,11 +68,16 @@ struct SyntheticAirwayCamera: UIViewRepresentable {
             node.simdScale = scale
             scene.rootNode.addChildNode(node)
         }
+        var usesBakedTissue = false
         if useResearchScene, let model = Self.researchScene {
             scene.rootNode.addChildNode(model.rootNode.clone())
             scene.rootNode.enumerateChildNodes { node, _ in
                 for material in node.geometry?.materials ?? [] {
                     material.isDoubleSided = true
+                    if material.name == "Mucosa", material.lightingModel == .physicallyBased {
+                        usesBakedTissue = true
+                        continue
+                    }
                     material.lightingModel = .blinn
                     material.specular.contents = UIColor(white: 0.38, alpha: 1)
                     material.shininess = 0.40
@@ -104,13 +109,14 @@ struct SyntheticAirwayCamera: UIViewRepresentable {
             lamp.light?.spotOuterAngle = 96
             lamp.light?.attenuationStartDistance = 0.018
             lamp.light?.attenuationEndDistance = 0.16
-            lamp.light?.intensity = 1100
+            // The calibrated PBR lamp operates a few millimeters from the surface.
+            lamp.light?.intensity = usesBakedTissue ? 0.0045 : 1100
             camera.addChildNode(lamp)
 
             let fill = SCNNode()
             fill.light = SCNLight()
             fill.light?.type = .ambient
-            fill.light?.intensity = 100
+            fill.light?.intensity = usesBakedTissue ? 35 : 100
             scene.rootNode.addChildNode(fill)
         } else {
             camera.light = SCNLight()

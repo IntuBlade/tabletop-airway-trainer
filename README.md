@@ -24,3 +24,11 @@ With access to the licensed device frameworks, set `TRAINER_BLADE_SDK` to their 
 Print the [US Letter trainer QR sheet](Artwork/trainer-qr-print-letter.pdf) at **Actual Size (100%)**. Check that the distance between the two ruler ticks is 40 mm. Lay the sheet flat on the table. Choose **Practice with blade**. Hold the whole code in the blade view. Tracking automatically starts the rep at a preset angle just inside the teeth. In the research scene, forward and backward blade travel follows the bend from mouth to throat. Blade turns and sideways movement steer the view. Keep the QR still and in view. If tracking drops, the app shows the blade video and resumes from the same reference when the QR returns. Tap **Reset to teeth** to start again from the current blade position.
 
 The optional local build input `TRAINER_RESEARCH_SCENE` accepts an authorized, meter-scale USDZ named `PrivateAirway.usdz` in camera-local coordinates. It is used in the live-motion screen. The default renderer uses schematic geometry.
+
+For a private single-mesh airway with vertex colors, [the Blender authoring script](Tools/author_airway.py) creates an editable Blender scene and a textured USDZ for the research build. Run it on macOS with Blender 4.2's Python module, NumPy, and the Apple USD tools:
+
+```sh
+python Tools/author_airway.py /path/to/original/PrivateAirway.usdz /path/to/private/output
+```
+
+Pass the exported `/path/to/private/output/PrivateAirway.usdz` as `TRAINER_RESEARCH_SCENE` when generating the blade-enabled project. Store the source mesh, generated textures, Blender scene and rendered previews in the private workspace.
