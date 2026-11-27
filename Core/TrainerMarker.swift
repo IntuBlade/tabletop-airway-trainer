@@ -66,26 +66,37 @@ enum TrainerMarker {
 struct MarkerSequence {
     let widthMM: Double
 
-    init(widthMM: Double = TrainerMarker.standardWidthMM) { self.widthMM = widthMM }
+    private let acquisitionGap: Double
+
+    init(widthMM: Double = TrainerMarker.standardWidthMM, acquisitionGap: Double = 0.25) {
+        self.widthMM = widthMM
+        self.acquisitionGap = acquisitionGap
+    }
 
     private var samples = [[SIMD2<Double>]]()
     private var stableCorners: [SIMD2<Double>]?
     private var lastTime = -Double.infinity
 
-    mutating func pose(_ corners: [SIMD2<Double>]?, at time: Double) -> simd_float4x4? {
-        if time <= lastTime || time - lastTime > 0.25 {
+    mutating func pose(_ corners: [SIMD2<Double>]?, at time: Double, hasAnchor: Bool = false) -> simd_float4x4? {
+        if time <= lastTime || time - lastTime > (hasAnchor ? 0.25 : acquisitionGap) {
             samples.removeAll()
             stableCorners = nil
         }
         lastTime = time
-        guard let corners, TrainerMarker.solve(corners, widthMM: widthMM) != nil else {
+        guard let corners, let measured = TrainerMarker.solve(corners, widthMM: widthMM) else {
             samples.removeAll()
             stableCorners = nil
             return nil
         }
         samples.append(corners)
         if samples.count > 3 { samples.removeFirst() }
-        guard samples.count == 3 else { return nil }
+        guard samples.count == 3 else {
+            // Acquiring the initial reference needs multiple observations. Once
+            // anchored, a fresh validated measurement can resume motion alone.
+            guard hasAnchor else { return nil }
+            stableCorners = corners
+            return measured
+        }
         func median(_ a: Double, _ b: Double, _ c: Double) -> Double {
             max(min(a,b), min(max(a,b), c))
         }

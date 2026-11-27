@@ -120,6 +120,11 @@ struct BladeSurfaceTracker {
         let pose: simd_float4x4?
         let initialPose: simd_float4x4?
         let detectedCorners: [SIMD2<Double>]?
+
+        var held: Self? {
+            guard let initialPose, let pose else { return nil }
+            return Self(state: .held, pose: pose, initialPose: initialPose, detectedCorners: nil)
+        }
     }
     private struct Reference {
         let surface: SurfaceImage
@@ -131,14 +136,17 @@ struct BladeSurfaceTracker {
     private var filter = BladePoseFilter()
     private var initialPose: simd_float4x4?
     private var lastPose: simd_float4x4?
+    private var preferDirectFix = false
     private var nextDecode = -Double.infinity
     private var qrReference: Reference?
     private var usingLocalReference = false
     private var nextAnchorCheck = -Double.infinity
 
-    init(widthMM: Double) {
+    init(widthMM: Double, resume: Observation? = nil) {
         self.widthMM = widthMM
-        sequence = MarkerSequence(widthMM: widthMM)
+        initialPose = resume?.initialPose
+        lastPose = resume?.pose
+        sequence = MarkerSequence(widthMM: widthMM, acquisitionGap: 1.0)
     }
 
     mutating func update(_ image: CGImage, at time: Double) -> Observation {
@@ -152,10 +160,12 @@ struct BladeSurfaceTracker {
                   TrainerMarker.solve(estimate, widthMM: widthMM) != nil else { return nil }
             return estimate
         }
-        corners = transfer(reference)
+        let triedQRFirst = preferDirectFix && time >= nextDecode
+        if triedQRFirst { detected = try? TrainerMarker.corners(in: image) }
+        corners = detected ?? transfer(reference)
         // Revisit the original textured image to remove incremental drift. This
         // does not require the printed symbol to decode or even be in the frame.
-        if usingLocalReference, time >= nextAnchorCheck {
+        if detected == nil, usingLocalReference, time >= nextAnchorCheck {
             nextAnchorCheck = time + (corners == nil ? 0.25 : 2)
             if let anchored = transfer(qrReference) {
                 corners = anchored
@@ -163,14 +173,18 @@ struct BladeSurfaceTracker {
                 usingLocalReference = false
             }
         }
-        if corners == nil, time >= nextDecode {
+        let needsQRRetry = corners == nil && !triedQRFirst && time >= nextDecode
+        if needsQRRetry {
             detected = try? TrainerMarker.corners(in: image)
             corners = detected
+        }
+        if triedQRFirst || needsQRRetry {
             // Decode promptly when acquiring a lock. Rate-limit failed searches
             // after loss while continuing to try the existing surface reference.
             nextDecode = detected == nil && lastPose != nil ? time + 0.20 : time
         }
-        let measurement = sequence.pose(corners, at: time)
+        preferDirectFix = initialPose != nil && (detected != nil || corners == nil)
+        let measurement = sequence.pose(corners, at: time, hasAnchor: initialPose != nil)
         if let pose = filter.update(measurement, at: time), let corners {
             lastPose = pose
             if initialPose == nil { initialPose = pose }

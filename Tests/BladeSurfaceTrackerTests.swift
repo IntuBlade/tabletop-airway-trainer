@@ -47,6 +47,18 @@ final class BladeSurfaceTrackerTests: XCTestCase {
         var result = scan(first)
         for _ in 0..<4 { result = scan(first) }
         let origin = try XCTUnwrap(result.initialPose)
+        // An expensive frame or a slow video cadence must not hold an already
+        // anchored rep indefinitely while the same target remains visible.
+        let slowShift = try image(16, 0)
+        XCTAssertNotNil(try TrainerMarker.corners(in: slowShift))
+        for _ in 0..<8 {
+            time += 0.32
+            result = scan(slowShift)
+        }
+        XCTAssertEqual(result.state, .tracking, "visible QR at slow cadence")
+        XCTAssertGreaterThan(simd_distance(try XCTUnwrap(result.pose).columns.3,origin.columns.3), 0.002)
+        for _ in 0..<8 { result = scan(first) }
+
         let final = try image(155,19,zoom: 1.1)
         XCTAssertNil(try TrainerMarker.corners(in: final))
         for i in 1...20 {
@@ -79,6 +91,13 @@ final class BladeSurfaceTrackerTests: XCTestCase {
             1.1*$0 + SIMD2(199/focal,-31/focal)
         }))
         XCTAssertLessThan(simd_distance(shifted.columns.3, recovered.columns.3),0.008)
+        // Reconnecting discards the old images, but preserves the session's
+        // original marker frame until a fresh absolute fix is available.
+        tracker = BladeSurfaceTracker(widthMM: 40, resume: result.held)
+        result = scan(white)
+        XCTAssertEqual(result.state, .held)
+        XCTAssertEqual(result.pose?.columns.3, shifted.columns.3)
+        XCTAssertEqual(result.initialPose?.columns.3, origin.columns.3)
         for _ in 0..<12 { result = scan(first) }
         XCTAssertEqual(result.state, .tracking)
         XCTAssertEqual(result.initialPose?.columns.3,origin.columns.3)

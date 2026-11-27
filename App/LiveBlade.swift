@@ -12,7 +12,6 @@ import ExternalAccessory
 struct BladeFrame {
     let image: UIImage
     let observation: BladeSurfaceTracker.Observation
-    let generation: Int
     let captured: Double
 
     var aspect: CGFloat { image.size.width / image.size.height }
@@ -25,6 +24,11 @@ final class TrainerBlade: NSObject, CameraDelegate, @unchecked Sendable {
     private var active = false
     private var busy = false
     private var generation = 0
+    private var rep = 0
+    private var locked: BladeSurfaceTracker.Observation?
+    private var frameCount = 0
+    private var analyzedCount = 0
+    private var lastReport = -Double.infinity
     private var frame: BladeFrame?
     private var widthMM = TrainerMarker.standardWidthMM
     // Only the serial image worker reads or writes these two fields.
@@ -56,8 +60,14 @@ final class TrainerBlade: NSObject, CameraDelegate, @unchecked Sendable {
         CameraManager.share().startInitialize()
     }
 
-    func enable(_ enabled: Bool, widthMM: Double = TrainerMarker.standardWidthMM) {
+    func enable(_ enabled: Bool, widthMM: Double = TrainerMarker.standardWidthMM, resetRep: Bool = true) {
         lock.withLock {
+            if resetRep {
+                rep += 1
+                locked = nil
+                frameCount = 0
+                analyzedCount = 0
+            }
             active = enabled
             generation += 1
             self.widthMM = widthMM
@@ -67,46 +77,59 @@ final class TrainerBlade: NSObject, CameraDelegate, @unchecked Sendable {
         }
     }
 
-    func snapshot() -> (frame: BladeFrame?, connection: String) {
+    func snapshot() -> (frame: BladeFrame?, observation: BladeSurfaceTracker.Observation?, rep: Int, connection: String) {
         lock.withLock {
-            let fresh = frame.flatMap { CACurrentMediaTime() - $0.captured < 0.4 ? $0 : nil }
-            let raw = rawPreview.flatMap { CACurrentMediaTime() - $0.captured < 0.4 ? $0 : nil }
-            return (fresh ?? raw, connection)
+            let now = CACurrentMediaTime()
+            let fresh = frame.flatMap { now - $0.captured < 0.4 ? $0 : nil }
+            let raw = rawPreview.flatMap { now - $0.captured < 0.4 ? $0 : nil }
+            let latest = fresh ?? raw
+            return (latest, latest?.observation.pose != nil ? latest?.observation : locked?.held ?? latest?.observation,
+                    rep, connection)
         }
     }
 
     func receive(_ data: Data!, image: UIImage!) {
         guard let image else { return }
         let now = CACurrentMediaTime()
-        let ticket: (generation: Int, widthMM: Double)? = lock.withLock {
+        let ticket: (generation: Int, widthMM: Double, resume: BladeSurfaceTracker.Observation?)? = lock.withLock {
             guard active else { return nil }
+            frameCount += 1
             if !sawFrame {
                 sawFrame = true
                 NSLog("Trainer accessory: received first blade image in setup")
             }
-            let prior = frame?.observation
+            let prior = locked
             let pending = BladeSurfaceTracker.Observation(state: prior?.pose == nil ? .acquiring : .held,
                                                           pose: prior?.pose, initialPose: prior?.initialPose,
                                                           detectedCorners: nil)
-            rawPreview = BladeFrame(image: image, observation: pending, generation: generation, captured: now)
+            rawPreview = BladeFrame(image: image, observation: pending, captured: now)
             guard !busy else { return nil }
             busy = true
-            return (generation, widthMM)
+            return (generation, widthMM, locked)
         }
         guard let ticket else { return }
         worker.async {
             let cg = image.cgImage ?? image.ciImage.flatMap { self.imageContext.createCGImage($0, from: $0.extent) }
             if self.trackerGeneration != ticket.generation {
-                self.tracker = BladeSurfaceTracker(widthMM: ticket.widthMM)
+                self.tracker = BladeSurfaceTracker(widthMM: ticket.widthMM, resume: ticket.resume)
                 self.trackerGeneration = ticket.generation
             }
             let observation = cg.map { self.tracker.update($0, at: now) }
-            self.lock.withLock {
+            let report: TrackingStatus? = self.lock.withLock {
                 self.busy = false
-                guard self.generation == ticket.generation, let observation else { return }
-                self.frame = BladeFrame(image: image, observation: observation,
-                                        generation: ticket.generation, captured: now)
+                guard self.generation == ticket.generation, let observation else { return nil }
+                self.frame = BladeFrame(image: image, observation: observation, captured: now)
+                if observation.pose != nil { self.locked = observation }
+                self.analyzedCount += 1
+                guard now - self.lastReport >= 1 else { return nil }
+                self.lastReport = now
+                return TrackingStatus(time: Date(), state: String(describing: observation.state),
+                                      received: self.frameCount, analyzed: self.analyzedCount,
+                                      lastAnalysisMS: Int((CACurrentMediaTime() - now) * 1000),
+                                      decodedQR: observation.detectedCorners != nil)
             }
+            report?.save()
+
         }
     }
 
@@ -138,11 +161,30 @@ final class TrainerBlade: NSObject, CameraDelegate, @unchecked Sendable {
     }
 }
 
+// One local, overwritten status sample allows a connected researcher to
+// distinguish a stopped feed from slow analysis. It contains no image or pose.
+private struct TrackingStatus: Encodable {
+    let time: Date
+    let state: String
+    let received: Int
+    let analyzed: Int
+    let lastAnalysisMS: Int
+    let decodedQR: Bool
+
+    func save() {
+        let url = URL.cachesDirectory.appending(path: "BladeTrackingStatus.json")
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        try? encoder.encode(self).write(to: url, options: .atomic)
+    }
+}
+
 struct LiveBladeMotion: View {
     var station: BladeRegistration? = nil
     @Environment(\.scenePhase) private var phase
     @State private var resetOrigin: (generation: Int, registration: BladeRegistration)?
     @AppStorage("blade-practice-qr-width-mm") private var printedWidth = TrainerMarker.standardWidthMM
+    @State private var previousIdlePolicy: Bool?
     @State private var editingWidth = false
     @State private var widthText = ""
 
@@ -162,12 +204,13 @@ struct LiveBladeMotion: View {
         TimelineView(.animation(minimumInterval: 1.0 / 30, paused: phase != .active)) { _ in
             let sample = TrainerBlade.shared.snapshot()
             let frame = sample.frame
-            let initial = frame?.observation.initialPose.flatMap {
+            let observation = sample.observation
+            let initial = observation?.initialPose.flatMap {
                 BladeRegistration.startingAt(referenceFromCamera: $0, mouthFromCamera: matrix_identity_float4x4)
             }
-            let manual = resetOrigin.flatMap { $0.generation == frame?.generation ? $0.registration : nil }
+            let manual = resetOrigin.flatMap { $0.generation == sample.rep ? $0.registration : nil }
             let registration = station ?? manual ?? initial
-            let trackedPose = registration?.mouthFromCamera(referenceFromCamera: frame?.observation.pose)
+            let trackedPose = registration?.mouthFromCamera(referenceFromCamera: observation?.pose)
             let camera = station != nil ? trackedPose : trackedPose.map {
                 SyntheticAirwayCamera.bladeGuide?.camera(for: $0)
                     ?? AirwayEntry.camera(for: $0, research: SyntheticAirwayCamera.hasResearchScene)
@@ -201,7 +244,10 @@ struct LiveBladeMotion: View {
                         }
                         .clipShape(.rect(cornerRadius: 14))
                     if camera != nil {
-                        if frame?.observation.state == .held {
+                        if frame == nil {
+                            Text("Blade video paused").font(.headline)
+                            Text("Your rep is saved in place. Check the blade connection.")
+                        } else if observation?.state == .held {
                             Text("Holding your view").font(.headline)
                             Text("Aim back toward the same tabletop detail or the QR to resume blade motion.")
                         } else {
@@ -214,15 +260,15 @@ struct LiveBladeMotion: View {
                         }
                         if station == nil {
                             Button("Reset to teeth") {
-                                if let latest = TrainerBlade.shared.snapshot().frame,
-                                   latest.observation.state == .tracking, let pose = latest.observation.pose,
+                                let latest = TrainerBlade.shared.snapshot()
+                                if latest.observation?.state == .tracking, let pose = latest.observation?.pose,
                                    let registration = BladeRegistration.startingAt(referenceFromCamera: pose,
                                                                                    mouthFromCamera: matrix_identity_float4x4) {
-                                    resetOrigin = (latest.generation, registration)
+                                    resetOrigin = (latest.rep, registration)
                                 }
                             }
                             .buttonStyle(.bordered)
-                            .disabled(frame?.observation.state != .tracking)
+                            .disabled(observation?.state != .tracking)
                         }
                     } else if frame == nil {
                         Text("Waiting for blade video").font(.headline)
@@ -283,12 +329,29 @@ struct LiveBladeMotion: View {
                 }
             }
         }
-        .onAppear { TrainerBlade.shared.enable(phase == .active, widthMM: effectiveWidth) }
-        .onChange(of: phase) { _, value in TrainerBlade.shared.enable(value == .active, widthMM: effectiveWidth) }
-        .onDisappear { TrainerBlade.shared.enable(false) }
+        .onAppear {
+            TrainerBlade.shared.enable(phase == .active, widthMM: effectiveWidth)
+            keepScreenAwake(phase == .active)
+        }
+        .onChange(of: phase) { _, value in
+            TrainerBlade.shared.enable(value == .active, widthMM: effectiveWidth, resetRep: false)
+            keepScreenAwake(value == .active)
+        }
+        .onDisappear {
+            TrainerBlade.shared.enable(false)
+            keepScreenAwake(false)
+        }
     }
 
-
+    private func keepScreenAwake(_ active: Bool) {
+        if active, previousIdlePolicy == nil {
+            previousIdlePolicy = UIApplication.shared.isIdleTimerDisabled
+            UIApplication.shared.isIdleTimerDisabled = true
+        } else if !active, let previousIdlePolicy {
+            UIApplication.shared.isIdleTimerDisabled = previousIdlePolicy
+            self.previousIdlePolicy = nil
+        }
+    }
 }
 
 private struct MarkerOutline: View {
