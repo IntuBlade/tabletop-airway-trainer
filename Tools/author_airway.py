@@ -8,6 +8,8 @@ UV seam duplicates retain their source positions and triangle connectivity.
 import argparse
 import hashlib
 import json
+import os
+import sys
 from pathlib import Path
 import re
 import subprocess
@@ -216,7 +218,7 @@ def bake(material, pigment, roughness, directory):
     nodes.remove(emit)
 
 
-def add_tissue_lift(stage, manifest, indices):
+def add_tissue_lift(stage, manifest, indices, matrices=None):
     """Carry the lift field and its shading normals in additional vertex UV channels."""
     meta = json.loads(manifest.read_text())
     landmarks = json.loads(manifest.with_suffix(".landmarks.json").read_text())
@@ -284,7 +286,28 @@ def add_tissue_lift(stage, manifest, indices):
     delta = 0.009 * weight[:, None] * axis
     normal_delta = normals(points + delta) - base_normals
     properties = []
-    for channel, values in enumerate((np.column_stack((weight, normal_delta[:, 0])), normal_delta[:, 1:]), 1):
+    channels = [np.column_stack((weight, normal_delta[:, 0])), normal_delta[:, 1:]]
+    if matrices:
+        # Sample the Blender action in the lens basis. Feather each regional
+        # corrective across shared edges so the surface stays continuous.
+        correction = np.zeros_like(points)
+        region = field("region")
+        src, dst = np.concatenate((triangles[:, [0, 1]], triangles[:, [1, 2]],
+                                   triangles[:, [2, 0]])).T
+        src, dst = np.r_[src, dst], np.r_[dst, src]
+        count = np.maximum(1, np.bincount(dst, minlength=len(points)))
+        for name, bone in [("epiglottis", "Rim roll"), ("tongue", "Tongue compression")]:
+            mask = (region == landmarks["regions"].index(name)).astype(float)
+            for _ in range(6):
+                mask = .5*(mask + np.bincount(dst, weights=mask[src], minlength=len(points))/count)
+            displacement = (points - valley) @ (matrices[bone] - np.eye(3)).T
+            correction += displacement * (weight * mask)[:, None]
+        from airway_studio import bind_review_shapes
+        bind_review_shapes(bpy.context.object, points, axis * weight[:, None], correction)
+        mid = points + axis * weight[:, None] * .00225
+        normal_correction = normals(mid + correction) - (base_normals + .25*normal_delta)
+        channels.extend(np.split(np.column_stack((correction, normal_correction)), 3, axis=1))
+    for channel, values in enumerate(channels, 1):
         encoded = ",".join("(%.7g,%.7g)" % tuple(row) for row in values[source_vertex])
         properties.append(f' texCoord2f[] primvars:st{channel} = [{encoded}] (interpolation = "vertex")')
     stage = stage.replace(" rel material:binding", "\n".join(properties) + "\n rel material:binding", 1)
@@ -294,7 +317,7 @@ def add_tissue_lift(stage, manifest, indices):
     return stage + '}\n'
 
 
-def package(source, out, mesh, manifest=None):
+def package(source, out, mesh, manifest=None, matrices=None):
     # Match UV loops to the source faces before authoring optional motion channels.
     stage = subprocess.check_output(["usdcat", str(source)], text=True)
     data = re.search(r'int\[\] faceVertexIndices = \[([^\]]+)\]', stage)
@@ -338,7 +361,7 @@ def package(source, out, mesh, manifest=None):
     end = stage.rindex("}")
     stage = stage[:end] + "\n".join(shaders) + "\n}\n" + stage[end:]
     if manifest:
-        stage = add_tissue_lift(stage, manifest, indices)
+        stage = add_tissue_lift(stage, manifest, indices, matrices)
     (out / "airway.usda").write_text(stage)
     subprocess.run(["usdcat", "airway.usda", "-o", "airway.usdc"], cwd=out, check=True)
     subprocess.run(["usdzip", "PrivateAirway.usdz", "airway.usdc", "pigment.png", "roughness.png", "normal.png"], cwd=out, check=True)
@@ -349,7 +372,10 @@ def main():
     parser.add_argument("source", type=Path)
     parser.add_argument("output", type=Path)
     parser.add_argument("--region-manifest", type=Path, help="Matching mesh JSON beside its .bin and .landmarks.json")
+    parser.add_argument("--studio", action="store_true", help="Author regional paint, papillae and corrective poses")
     args = parser.parse_args()
+    if args.studio and not args.region_manifest:
+        parser.error("--studio requires --region-manifest")
     out = args.output.resolve()
     out.mkdir(parents=True, exist_ok=True)
     if args.source.resolve() == out / "PrivateAirway.usdz":
@@ -366,10 +392,23 @@ def main():
     if args.region_manifest:
         color_labeled_tissue(obj.data, args.region_manifest)
     material, pigment, roughness = create_material(obj.data, labeled=bool(args.region_manifest))
+    matrices = None
+    if args.studio:
+        from airway_studio import prepare
+        pigment, matrices = prepare(obj, material, pigment, args.region_manifest, out)
     bpy.context.preferences.filepaths.save_version = 0
-    bpy.ops.wm.save_as_mainfile(filepath=str(out / "Airway.blend"))
     bake(material, pigment, roughness, out)
-    package(args.source.resolve(), out, obj.data, args.region_manifest)
+    package(args.source.resolve(), out, obj.data, args.region_manifest, matrices)
+    bpy.ops.wm.save_as_mainfile(filepath=str(out / "Airway.blend"))
+    if args.studio:
+        # The bpy 4.2 wheel can crash in C++ destructors at Python shutdown
+        # after these add-ons unregister. Finish this dedicated CLI process
+        # only after synchronous writes and independent USD validation succeed.
+        subprocess.run(["usdchecker", str(out / "PrivateAirway.usdz")], check=True)
+        bpy.ops.wm.read_factory_settings(use_empty=True)
+        sys.stdout.flush()
+        sys.stderr.flush()
+        os._exit(0)
 
 
 if __name__ == "__main__":

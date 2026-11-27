@@ -33,6 +33,8 @@ python Tools/author_airway.py /path/to/original/PrivateAirway.usdz /path/to/priv
 
 For regional tissue colors and surface finishes, add `--region-manifest /path/to/mesh.json`. The matching binary mesh and landmark labels must sit beside that manifest as `mesh.bin` and `mesh.landmarks.json`.
 
+For the studio pass, install the Blender authoring add-ons [Ucupaint](https://github.com/ucupumar/ucupaint/tree/64f829b), [ActionPoser](https://github.com/Arminando/ActionPoser/tree/b26a7e8) and [Tissue](https://github.com/alessandro-zomparelli/tissue/tree/d7f4c32) on the authoring machine. Add `--studio` to the regional authoring command. The studio mesh needs tongue, epiglottis and cord labels and a lift field. In the saved Blender scene, move the **Lift** pose bone along local X from 0 to 10 mm to preview rest, partial lift and full exposure. The exporter bakes the materials and samples the pose for the phone.
+
 If that mesh provides a lift field and vallecula landmark, the live renderer also responds to tracked blade elevation near the pocket. Lowering or withdrawing the blade releases the tissue. This is a pose-driven training approximation.
 
 Pass the exported `/path/to/private/output/PrivateAirway.usdz` as `TRAINER_RESEARCH_SCENE` when generating the blade-enabled project. Store the source mesh, generated textures, Blender scene and rendered previews in the private workspace.

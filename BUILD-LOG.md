@@ -141,3 +141,13 @@ Blade practice previously assumed a 40 mm black square for every print. A 160 mm
 Two regression checks cover frontal and tilted projections plus rendered images of the shipped QR through the Apple barcode detector. In the image replay a 20 mm advance, interrupted by a blank frame, measured 20.7 mm with a 40 mm print and 19.1 mm with a 160 mm print. The larger print measured about 5 mm when replayed with the original assumption. All 18 tests passed. The verified staging build installed on the research iPhone. The replay uses nominal optics. Physical depth accuracy with the blade and a measured print still needs checking.
 
 The live rep currently ends at finding and recovering the view. Marking both views, anatomical tagging and POGO review are available in the recorded exercise. Connecting those steps to the live simulated frames would let a learner review their own rep.
+
+### Painting and moving the blade view in Blender
+
+We gave the epiglottic rim, folds and tongue their own editable paint layers. At the same 2048-pixel atlas size, epiglottis detail increased from 5.57 to 15.25 texels per millimeter and vocal fold detail from 5.60 to 22.12. The rest of the surface went from 5.68 to 4.96. The tongue now uses relief baked from a 4,160-face Tissue patch. A control render used the same camera, mesh, lighting and paint with the previous procedural relief.
+
+The partial lift now rolls the epiglottic rim and compresses the tongue base. The ActionPoser control drives three editable Blender shapes. The phone interpolates the corrective displacement and shading normals on the GPU. Retracting the blade returns the tissue to rest. A first export looked almost black because a second Blender material output took over the bake. An actual SceneKit render caught the error after USD validation passed.
+
+Two 121-frame native replays, one with the lens held still and one with simulated blade motion, returned exactly to their initial frames. The clinical comparison still shows a sharper, brighter simulated epiglottic edge. The physical assembly audit also found a discrepancy between the design tip and the training contact point. The current rep uses a simulated contact point. Physical calibration and educator review remain open. Clinical reference: [University of Minnesota, third intubation example](https://airway.umn.edu/node/126).
+
+All 18 software tests passed. The signed research build with the verified asset installed and launched on the iPhone. Hands-on performance of this revision has yet to be established.

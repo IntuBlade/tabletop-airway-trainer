@@ -34,7 +34,7 @@ struct AirwayLiftRig {
               let direction = root.childNode(withName: "LiftDirection", recursively: true),
               let airway = root.childNode(withName: "Airway", recursively: true),
               let source = airway.geometry,
-              source.sources(for: .texcoord).count == 3,
+              [3, 6].contains(source.sources(for: .texcoord).count),
               let geometry = source.copy() as? SCNGeometry else { return nil }
         let axis = direction.simdWorldPosition - pocket.simdWorldPosition
         guard simd_length(axis) > 0.0001 else { return nil }
@@ -43,6 +43,15 @@ struct AirwayLiftRig {
         // Clone only the binding so simultaneous practice views have independent uniforms.
         airway.geometry = geometry
         let local = simd_normalize(airway.simdConvertVector(contact.axis, from: nil))
+        let corrective = source.sources(for: .texcoord).count == 6 ? """
+            float2 xy = _geometry.texcoords[3];
+            float2 zx = _geometry.texcoords[4];
+            float2 nyz = _geometry.texcoords[5];
+            float phase = clamp((travel + 0.0045) / 0.0135, 0.0, 1.0);
+            float partial = 4.0 * phase * (1.0 - phase);
+            _geometry.position.xyz += partial * float3(xy.x, 1.0 - xy.y, zx.x);
+            adjustedNormal += partial * float3(1.0 - zx.y, nyz.x, 1.0 - nyz.y);
+            """ : ""
         geometry.shaderModifiers = [.geometry: """
             #pragma arguments
             float travel;
@@ -53,7 +62,9 @@ struct AirwayLiftRig {
             // SceneKit reverses the V coordinate on import from USD.
             float2 yz = _geometry.texcoords[2];
             float3 normalDelta = float3(1.0 - lift.y, yz.x, 1.0 - yz.y);
-            _geometry.normal = normalize(_geometry.normal + normalDelta * (travel / 0.009));
+            float3 adjustedNormal = _geometry.normal + normalDelta * (travel / 0.009);
+            \(corrective)
+            _geometry.normal = normalize(adjustedNormal);
             """]
         geometry.setValue(NSValue(scnVector3: SCNVector3(local)), forKey: "liftAxis")
         update(camera: nil)
