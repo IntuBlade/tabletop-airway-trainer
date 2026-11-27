@@ -46,10 +46,21 @@ struct BladeMotionPreview: View {
 struct SyntheticAirwayCamera: UIViewRepresentable {
     let mouthFromCamera: simd_float4x4
     var useResearchScene = false
+    var trackingAvailable = true
+
+    final class Coordinator {
+        var lift: AirwayLiftRig?
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator() }
 
     private static let researchScene = Bundle.main.url(forResource: "PrivateAirway", withExtension: "usdz")
         .flatMap { try? SCNScene(url: $0, options: nil) }
     static var hasResearchScene: Bool { researchScene != nil }
+
+    static let supportsTissueLift = researchScene.flatMap {
+        AirwayLiftRig(root: $0.rootNode.clone())
+    } != nil
 
     func makeUIView(context: Context) -> SCNView {
         let view = SCNView()
@@ -70,7 +81,9 @@ struct SyntheticAirwayCamera: UIViewRepresentable {
         }
         var usesBakedTissue = false
         if useResearchScene, let model = Self.researchScene {
-            scene.rootNode.addChildNode(model.rootNode.clone())
+            let airway = model.rootNode.clone()
+            scene.rootNode.addChildNode(airway)
+            context.coordinator.lift = AirwayLiftRig(root: airway)
             scene.rootNode.enumerateChildNodes { node, _ in
                 for material in node.geometry?.materials ?? [] {
                     material.isDoubleSided = true
@@ -134,10 +147,12 @@ struct SyntheticAirwayCamera: UIViewRepresentable {
         camera.simdTransform = mouthFromCamera
         scene.rootNode.addChildNode(camera)
         view.pointOfView = camera
+        context.coordinator.lift?.update(camera: trackingAvailable ? mouthFromCamera : nil)
         return view
     }
 
     func updateUIView(_ view: SCNView, context: Context) {
         view.pointOfView?.simdTransform = mouthFromCamera
+        context.coordinator.lift?.update(camera: trackingAvailable ? mouthFromCamera : nil)
     }
 }

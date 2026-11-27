@@ -68,3 +68,32 @@ final class BladeStabilityTests: XCTestCase {
         }
     }
 }
+
+final class TissueLiftTests: XCTestCase {
+    // A synthetic pocket at the training contact offset in the end-of-path frame.
+    let contact = TissueLiftContact(pocket: [0, 0.010, -0.019], axis: [0, 1, 0])
+
+    func testContactIsGradedReversibleAndLocalToThePocket() {
+        func weight(_ x: Float, _ y: Float, _ z: Float) -> Float {
+            var camera = matrix_identity_float4x4
+            camera.columns.3 = [x, y, z, 1]
+            return contact.weight(for: camera)
+        }
+        XCTAssertEqual(weight(0, 0, 0), 0)
+        XCTAssertEqual(weight(0, 0.005, 0), 0.5, accuracy: 0.001)
+        XCTAssertEqual(weight(0, 0.010, 0), 1)
+        XCTAssertEqual(weight(0.02, 0.010, 0), 0)
+        XCTAssertEqual(weight(0, 0.010, 0.025), 0)
+        XCTAssertEqual(weight(0, 0.03, 0), 0)
+        XCTAssertEqual(weight(0, 0, 0), 0)
+        XCTAssertEqual(contact.weight(for: nil), 0)
+    }
+
+    func testCenteredAdvanceAloneDoesNotLiftTissue() {
+        for mm in 0...70 {
+            var movement = matrix_identity_float4x4
+            movement.columns.3.z = -Float(mm) / 1000
+            XCTAssertEqual(contact.weight(for: AirwayEntry.camera(for: movement, research: true)), 0)
+        }
+    }
+}

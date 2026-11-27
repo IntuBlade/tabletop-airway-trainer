@@ -33,4 +33,6 @@ python Tools/author_airway.py /path/to/original/PrivateAirway.usdz /path/to/priv
 
 For regional tissue colors and surface finishes, add `--region-manifest /path/to/mesh.json`. The matching binary mesh and landmark labels must sit beside that manifest as `mesh.bin` and `mesh.landmarks.json`.
 
+If that mesh provides a lift field and vallecula landmark, the live renderer also responds to tracked blade elevation near the pocket. Lowering or withdrawing the blade releases the tissue. This is a pose-driven training approximation.
+
 Pass the exported `/path/to/private/output/PrivateAirway.usdz` as `TRAINER_RESEARCH_SCENE` when generating the blade-enabled project. Store the source mesh, generated textures, Blender scene and rendered previews in the private workspace.

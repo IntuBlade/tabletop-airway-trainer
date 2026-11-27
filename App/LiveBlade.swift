@@ -167,7 +167,7 @@ struct LiveBladeMotion: View {
                                 if registration != nil {
                                     SyntheticAirwayCamera(
                                         mouthFromCamera: camera ?? matrix_identity_float4x4,
-                                        useResearchScene: true
+                                        useResearchScene: true, trackingAvailable: camera != nil
                                     )
                                     .opacity(camera == nil ? 0 : 1)
                                     .accessibilityHidden(camera == nil)
@@ -177,7 +177,11 @@ struct LiveBladeMotion: View {
                         .clipShape(.rect(cornerRadius: 14))
                     if camera != nil {
                         Text("Inside the mouth").font(.headline)
-                        Text("Advance or withdraw along the mouth. Turn the blade to look around. Recording is off.")
+                        if SyntheticAirwayCamera.supportsTissueLift {
+                            Text("Advance to the epiglottis. Lift gently to reveal the opening, then lower the blade to release. Recording is off.")
+                        } else {
+                            Text("Advance or withdraw along the mouth. Turn the blade to look around. Recording is off.")
+                        }
                         if station == nil {
                             Button("Reset to teeth") {
                                 if let pose = TrainerBlade.shared.snapshot().frame?.practicePose {

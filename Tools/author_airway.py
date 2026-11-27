@@ -2,7 +2,8 @@
 
 Usage: python author_airway.py input.usdz output_directory
 The input must be the meter-scale single-mesh airway with vertex displayColor.
-Only the material and UVs are added to the original USD geometry.
+A matched region manifest with lift weights adds localized motion channels.
+UV seam duplicates retain their source positions and triangle connectivity.
 """
 import argparse
 import hashlib
@@ -215,8 +216,86 @@ def bake(material, pigment, roughness, directory):
     nodes.remove(emit)
 
 
-def package(source, out, mesh):
-    # Carry the original vertex order, normals, faces, units and axes through.
+def add_tissue_lift(stage, manifest, indices):
+    """Carry the lift field and its shading normals in additional vertex UV channels."""
+    meta = json.loads(manifest.read_text())
+    landmarks = json.loads(manifest.with_suffix(".landmarks.json").read_text())
+    raw = manifest.with_suffix(".bin").read_bytes()
+    if "lift" not in meta["layout"]:
+        return stage
+
+    def field(name):
+        info = meta["layout"][name]
+        return np.frombuffer(raw, "<f4", info["count"], info["offset"])
+
+    def triples(values):
+        return ",".join("(%.7g,%.7g,%.7g)" % tuple(row) for row in values)
+
+    source = field("position").reshape(-1, 3)
+    exported = re.search(r'point3f\[\] points = \[([^\]]+)\]', stage).group(1)
+    points = np.fromstring(exported.replace("(", "").replace(")", ""), sep=",").reshape(-1, 3)
+    basis, _, _, _ = np.linalg.lstsq(np.column_stack((source, np.ones(len(source)))), points, rcond=None)
+    if not np.allclose(source @ basis[:3] + basis[3], points, atol=2e-6):
+        raise ValueError("Lift field requires a matching coordinate frame")
+
+    def landmark(name):
+        return np.array(landmarks["points"][name]["point"]) @ basis[:3] + basis[3]
+
+    valley = landmark("vallecula")
+    axis = np.array(landmarks["lift_direction"]) @ basis[:3]
+    axis /= np.linalg.norm(axis)
+    # Localize the existing lift field around the tongue base and epiglottis.
+    radius = np.linalg.norm(points - landmark("epiglottis_tip"), axis=1)
+    t = np.clip((0.038 - radius) / 0.025, 0, 1)
+    weight = np.clip(field("lift"), 0, 1) * t*t*(3 - 2*t)
+    weight[weight < 0.001] = 0
+    triangles = indices.reshape(-1, 3)
+    def normals(vertices):
+        a, b, c = vertices[triangles].transpose(1, 0, 2)
+        face = np.cross(b-a, c-a)
+        result = np.zeros_like(vertices)
+        for corner in triangles.T:
+            np.add.at(result, corner, face)
+        return result / np.maximum(np.linalg.norm(result, axis=1, keepdims=True), 1e-12)
+
+    stage = stage.replace('defaultPrim = "Airway"', 'defaultPrim = "Rig"')
+    stage = stage.replace('def Mesh "Airway"', 'def Xform "Rig" {\ndef Mesh "Airway"')
+    stage = stage.replace('</Airway/', '</Rig/Airway/')
+    base_normals = normals(points)
+    # Use the same vertex index for the surface texture and the lift field.
+    # Split only UV seams and carry each source vertex's deformation to its copies.
+    uv_attribute = r'texCoord2f\[\] primvars:st = \[([^\]]+)\] \(interpolation = "faceVarying"\)'
+    uv_text = re.search(uv_attribute, stage).group(1)
+    uv = np.fromstring(uv_text.replace("(", "").replace(")", ""), sep=",").reshape(-1, 2)
+    seams, new_indices = np.unique(np.column_stack((indices, uv)), axis=0, return_inverse=True)
+    source_vertex = seams[:, 0].astype(np.int32)
+    stage = re.sub(uv_attribute, 'texCoord2f[] primvars:st = [' +
+                   ",".join("(%.7f,%.7f)" % tuple(pair) for pair in seams[:, 1:]) +
+                   '] (interpolation = "vertex")', stage)
+    for attribute in ["points", "normals", "primvars:displayColor"]:
+        pattern = rf'({attribute} = )\[([^\]]+)\]'
+        match = re.search(pattern, stage)
+        values = np.fromstring(match[2].replace("(", "").replace(")", ""), sep=",").reshape(-1, 3)
+        stage = stage[:match.start(2)] + triples(values[source_vertex]) + stage[match.end(2):]
+    stage = re.sub(r'faceVertexIndices = \[[^\]]+\]', 'faceVertexIndices = [' +
+                   ",".join(map(str, new_indices.ravel())) + ']', stage)
+    # Channel 1 holds weight and normal change in x; channel 2 holds y and z.
+    # Normal deltas correspond to the 9 mm lifted endpoint.
+    delta = 0.009 * weight[:, None] * axis
+    normal_delta = normals(points + delta) - base_normals
+    properties = []
+    for channel, values in enumerate((np.column_stack((weight, normal_delta[:, 0])), normal_delta[:, 1:]), 1):
+        encoded = ",".join("(%.7g,%.7g)" % tuple(row) for row in values[source_vertex])
+        properties.append(f' texCoord2f[] primvars:st{channel} = [{encoded}] (interpolation = "vertex")')
+    stage = stage.replace(" rel material:binding", "\n".join(properties) + "\n rel material:binding", 1)
+    for name, location in [("LiftPocket", valley), ("LiftDirection", valley + 0.01 * axis)]:
+        stage += (f'def Xform "{name}" {{\n double3 xformOp:translate = {triples([location])}\n'
+                  ' uniform token[] xformOpOrder = ["xformOp:translate"]\n}\n')
+    return stage + '}\n'
+
+
+def package(source, out, mesh, manifest=None):
+    # Match UV loops to the source faces before authoring optional motion channels.
     stage = subprocess.check_output(["usdcat", str(source)], text=True)
     data = re.search(r'int\[\] faceVertexIndices = \[([^\]]+)\]', stage)
     indices = np.fromstring(data.group(1), sep=",", dtype=np.int32)
@@ -258,6 +337,8 @@ def package(source, out, mesh):
         }}''')
     end = stage.rindex("}")
     stage = stage[:end] + "\n".join(shaders) + "\n}\n" + stage[end:]
+    if manifest:
+        stage = add_tissue_lift(stage, manifest, indices)
     (out / "airway.usda").write_text(stage)
     subprocess.run(["usdcat", "airway.usda", "-o", "airway.usdc"], cwd=out, check=True)
     subprocess.run(["usdzip", "PrivateAirway.usdz", "airway.usdc", "pigment.png", "roughness.png", "normal.png"], cwd=out, check=True)
@@ -288,7 +369,7 @@ def main():
     bpy.context.preferences.filepaths.save_version = 0
     bpy.ops.wm.save_as_mainfile(filepath=str(out / "Airway.blend"))
     bake(material, pigment, roughness, out)
-    package(args.source.resolve(), out, obj.data)
+    package(args.source.resolve(), out, obj.data, args.region_manifest)
 
 
 if __name__ == "__main__":
