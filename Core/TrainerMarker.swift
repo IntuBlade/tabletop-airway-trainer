@@ -1,6 +1,7 @@
 import Vision
 
 enum TrainerMarker {
+    static let standardWidthMM = 40.0
     static let horizontalFOV = 68.0
     static let halfWidthAtUnitDepth = tan(horizontalFOV * .pi / 360)
     static let payload = "intublade-trainer-motion-v1"
@@ -9,11 +10,11 @@ enum TrainerMarker {
         try corners(in: image).flatMap { solve($0) }
     }
 
-    static func solve(_ corners: [SIMD2<Double>]) -> simd_float4x4? {
+    static func solve(_ corners: [SIMD2<Double>], widthMM: Double = standardWidthMM) -> simd_float4x4? {
         guard corners.count == 4 else { return nil }
         let shortest = (0..<4).map { simd_distance(corners[$0], corners[($0+1)%4]) }.min() ?? 0
         // Limit residual relative to marker size as it shrinks during withdrawal.
-        guard let measured = SquarePose.referenceFromCamera(corners: corners, sideMeters: 0.04,
+        guard let measured = SquarePose.referenceFromCamera(corners: corners, sideMeters: widthMM / 1000,
                                                             maxNormalizedError: min(0.025, shortest * 0.08)) else { return nil }
         // A tiny perspective error on a square viewed head-on can create a large
         // spurious tilt. Fit a rotated square to all four corners. Prefer its
@@ -33,7 +34,7 @@ enum TrainerMarker {
         let weight = Float(min(1, max(0, (error - 0.01) / 0.02)))
         if weight == 1 { return measured }
         let direction = SIMD2<Float>(edge / width)
-        let depth = Float(0.04 / width)
+        let depth = Float(widthMM / 1000 / width)
         let frontal = simd_float4x4(columns: (
             [direction.x, -direction.y, 0, 0], [-direction.y, -direction.x, 0, 0],
             [0, 0, -1, 0], [Float(center.x)*depth, -Float(center.y)*depth, -depth, 1]
@@ -63,6 +64,10 @@ enum TrainerMarker {
 // Filter the four observed corners before perspective amplifies their noise.
 // Three recent observations are required after loss. Never extrapolate a hidden QR.
 struct MarkerSequence {
+    let widthMM: Double
+
+    init(widthMM: Double = TrainerMarker.standardWidthMM) { self.widthMM = widthMM }
+
     private var samples = [[SIMD2<Double>]]()
     private var stableCorners: [SIMD2<Double>]?
     private var lastTime = -Double.infinity
@@ -73,7 +78,7 @@ struct MarkerSequence {
             stableCorners = nil
         }
         lastTime = time
-        guard let corners, TrainerMarker.solve(corners) != nil else {
+        guard let corners, TrainerMarker.solve(corners, widthMM: widthMM) != nil else {
             samples.removeAll()
             stableCorners = nil
             return nil
@@ -94,12 +99,12 @@ struct MarkerSequence {
         if let stableCorners {
             let distance = zip(filtered, stableCorners).map { simd_distance($0, $1) }.max() ?? 0
             let noiseFloor = 0.0015  // Camera-normalized units, about 0.7 px at 640 px wide.
-            if distance <= noiseFloor { return TrainerMarker.solve(stableCorners) }
+            if distance <= noiseFloor { return TrainerMarker.solve(stableCorners, widthMM: widthMM) }
             let weight = 1 - noiseFloor / distance
             self.stableCorners = zip(stableCorners, filtered).map { $0 + weight * ($1 - $0) }
         } else {
             stableCorners = filtered
         }
-        return stableCorners.flatMap(TrainerMarker.solve)
+        return stableCorners.flatMap { TrainerMarker.solve($0, widthMM: widthMM) }
     }
 }

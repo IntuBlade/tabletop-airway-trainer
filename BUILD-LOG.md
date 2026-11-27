@@ -133,3 +133,11 @@ The third [university clinical example](https://airway.umn.edu/node/126) shows a
 A 121-frame native replay exercised advance, lift, hold, release and withdrawal. A second render held the camera still while applying the same lift input. The opening was partly covered at rest, became visible under lift and returned to its starting appearance on release. Both replays returned pixel-for-pixel to their rest frames. An initial USD blend-shape export passed asset validation but rendered blank. The shipped version uses the textured mesh and interpolated vertex weights directly on the GPU.
 
 All 16 software tests passed, including straight advance without lift, partial lift, off-center motion, withdrawal and loss of tracking. USD validation passed. The signed staging app installed on the research iPhone with the verified asset. A hands-on blade rep and educator review of the movement remain pending. The carton test remains on hold.
+
+### Checking printed QR scale and recovery
+
+Blade practice previously assumed a 40 mm black square for every print. A 160 mm square made a known 20 mm movement appear to be about 5 mm. Blade practice now accepts a measured black-square width, saves it locally and resets the tracking origin when it changes. The optional placed-head station retains its 40 mm image registration. When the video stops, the live screen shows the connection status. When video is present it distinguishes an absent QR from a detected QR awaiting tracking lock.
+
+Two regression checks cover frontal and tilted projections plus rendered images of the shipped QR through the Apple barcode detector. In the image replay a 20 mm advance, interrupted by a blank frame, measured 20.7 mm with a 40 mm print and 19.1 mm with a 160 mm print. The larger print measured about 5 mm when replayed with the original assumption. All 18 tests passed. The verified staging build installed on the research iPhone. The replay uses nominal optics. Physical depth accuracy with the blade and a measured print still needs checking.
+
+The live rep currently ends at finding and recovering the view. Marking both views, anatomical tagging and POGO review are available in the recorded exercise. Connecting those steps to the live simulated frames would let a learner review their own rep.

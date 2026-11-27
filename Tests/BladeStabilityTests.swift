@@ -97,3 +97,31 @@ final class TissueLiftTests: XCTestCase {
         }
     }
 }
+
+final class PrintedMarkerTests: XCTestCase {
+    func testMeasuredWidthPreservesTravelAcrossMarkerLoss() throws {
+        for widthMM in [40.0, 160.0] {
+            for tilt in [0.0, 0.55] {
+                let rotation = simd_quatd(angle: tilt, axis: [0, 1, 0])
+                func corners(at distance: Double) -> [SIMD2<Double>] {
+                    [SIMD2<Double>(-1,-1),[1,-1],[1,1],[-1,1]].map { p in
+                        let v = rotation.act(SIMD3(p.x, p.y, 0) * widthMM / 2000) + SIMD3(0, 0, distance)
+                        return SIMD2(v.x, v.y) / v.z
+                    }
+                }
+                var tracker = MarkerSequence(widthMM: widthMM)
+                func acquire(_ distance: Double, tick: Int) throws -> simd_float4x4 {
+                    for i in tick..<(tick + 2) {
+                        XCTAssertNil(tracker.pose(corners(at: distance), at: Double(i)/30))
+                    }
+                    return try XCTUnwrap(tracker.pose(corners(at: distance), at: Double(tick + 2)/30))
+                }
+                let start = try acquire(0.20, tick: 0)
+                XCTAssertNil(tracker.pose(nil, at: 0.10))
+                let moved = try acquire(0.18, tick: 4)
+                let displacement = simd_length((start.inverse * moved).columns.3 - SIMD4<Float>(0,0,0,1))
+                XCTAssertEqual(displacement, 0.020, accuracy: 0.001)
+            }
+        }
+    }
+}

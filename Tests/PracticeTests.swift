@@ -189,3 +189,49 @@ extension BladeRegistrationTests {
         }
     }
 }
+
+extension MarkerDetectorTests {
+    func testPrintedScaleWithActualQRDetectionAndReacquisition() throws {
+        let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("Artwork/motion-marker.png")
+        let qr = try XCTUnwrap(CIImage(contentsOf: url))
+        let bounds = CGRect(x: 0, y: 0, width: 640, height: 480)
+        let paper = CIImage(color: .white).cropped(to: bounds)
+        let context = CIContext()
+        func detect(_ image: CIImage) throws -> [SIMD2<Double>]? {
+            try TrainerMarker.corners(in: XCTUnwrap(context.createCGImage(image, from: bounds)))
+        }
+        for width in [40.0, 160.0] {
+            func observation(distanceMM: Double) throws -> [SIMD2<Double>] {
+                // The shipped PNG's black code spans 522 source pixels.
+                let focal = bounds.width / (2 * TrainerMarker.halfWidthAtUnitDepth)
+                let scale = focal * width / distanceMM / 522
+                let image = qr.transformed(by: .init(scaleX: scale, y: scale))
+                let centered = image.transformed(by: .init(translationX: bounds.midX - image.extent.midX,
+                                                           y: bounds.midY - image.extent.midY))
+                return try XCTUnwrap(detect(centered.composited(over: paper)))
+            }
+            let far = try observation(distanceMM: 200)
+            let near = try observation(distanceMM: 180)
+            var tracker = MarkerSequence(widthMM: width)
+            func lock(_ corners: [SIMD2<Double>], tick: Int) throws -> simd_float4x4 {
+                XCTAssertNil(tracker.pose(corners, at: Double(tick)/30))
+                XCTAssertNil(tracker.pose(corners, at: Double(tick+1)/30))
+                return try XCTUnwrap(tracker.pose(corners, at: Double(tick+2)/30))
+            }
+            let start = try lock(far, tick: 0)
+            let missing = try detect(paper)
+            XCTAssertNil(missing)
+            XCTAssertNil(tracker.pose(missing, at: 0.1))
+            let end = try lock(near, tick: 4)
+            let travel = abs((start.inverse * end).columns.3.z)
+            print("Rendered QR \(width) mm, 20 mm advance measured \(travel * 1000) mm")
+            XCTAssertEqual(travel, 0.020, accuracy: 0.003)
+            if width == 160 {
+                let oldStart = try XCTUnwrap(TrainerMarker.solve(far))
+                let oldEnd = try XCTUnwrap(TrainerMarker.solve(near))
+                XCTAssertEqual(abs((oldStart.inverse * oldEnd).columns.3.z), 0.005, accuracy: 0.001)
+            }
+        }
+    }
+}

@@ -54,11 +54,11 @@ final class TrainerBlade: NSObject, CameraDelegate, @unchecked Sendable {
         CameraManager.share().startInitialize()
     }
 
-    func enable(_ enabled: Bool) {
+    func enable(_ enabled: Bool, widthMM: Double = TrainerMarker.standardWidthMM) {
         lock.withLock {
             active = enabled
             generation += 1
-            sequence = MarkerSequence()
+            sequence = MarkerSequence(widthMM: widthMM)
             filter = BladePoseFilter()
             frame = nil
             rawPreview = nil
@@ -129,7 +129,7 @@ final class TrainerBlade: NSObject, CameraDelegate, @unchecked Sendable {
     func receiveDeviceConflicted(_ conflicted: Bool) { if conflicted { invalidate(); setConnection("Blade in use by another app") } }
 
     private func invalidate() {
-        lock.withLock { generation += 1; sequence = MarkerSequence(); filter = BladePoseFilter(); frame = nil; rawPreview = nil; sawFrame = false }
+        lock.withLock { generation += 1; sequence = MarkerSequence(widthMM: sequence.widthMM); filter = BladePoseFilter(); frame = nil; rawPreview = nil; sawFrame = false }
     }
 }
 
@@ -137,6 +137,21 @@ struct LiveBladeMotion: View {
     var station: BladeRegistration? = nil
     @Environment(\.scenePhase) private var phase
     @State private var origin: BladeRegistration?
+    @AppStorage("blade-practice-qr-width-mm") private var printedWidth = TrainerMarker.standardWidthMM
+    @State private var editingWidth = false
+    @State private var widthText = ""
+
+    private var effectiveWidth: Double {
+        // An AR station was registered against the standard physical image size.
+        station == nil ? printedWidth : TrainerMarker.standardWidthMM
+    }
+
+    private var enteredWidth: Double? {
+        let text = widthText.trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: Locale.current.decimalSeparator ?? ".", with: ".")
+        guard let value = Double(text), value.isFinite, value > 0 else { return nil }
+        return value
+    }
 
     var body: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 30, paused: phase != .active)) { _ in
@@ -190,12 +205,17 @@ struct LiveBladeMotion: View {
                             }
                             .buttonStyle(.bordered)
                         }
+                    } else if frame == nil {
+                        Text("Waiting for blade video").font(.headline)
+                    } else if frame?.corners != nil {
+                        Text("QR found").font(.headline)
+                        Text("Hold the blade steady while tracking locks.")
                     } else if registration != nil {
                         Text("Tracking paused").font(.headline)
                         Text("Bring the whole QR back into view to resume.")
                     } else {
                         Text("Aim the blade at the QR").font(.headline)
-                        Text("Hold the whole 40 mm code in view. Practice starts just inside the teeth when tracking is ready.")
+                        Text("Hold the whole black square in view. Practice starts just inside the teeth when tracking is ready.")
                     }
                 }
                 .padding()
@@ -207,8 +227,49 @@ struct LiveBladeMotion: View {
             }
         }
         .navigationTitle("Blade practice").navigationBarTitleDisplayMode(.inline)
-        .onAppear { TrainerBlade.shared.enable(phase == .active) }
-        .onChange(of: phase) { _, value in TrainerBlade.shared.enable(value == .active) }
+        .toolbar {
+            if station == nil {
+                Button("QR size") {
+                    widthText = printedWidth.formatted(.number.grouping(.never))
+                    editingWidth = true
+                }
+            }
+        }
+        .sheet(isPresented: $editingWidth) {
+            NavigationStack {
+                Form {
+                    Section {
+                        HStack {
+                            TextField("Black square width", text: $widthText)
+                                .keyboardType(.decimalPad)
+                            Text("mm").foregroundStyle(.secondary)
+                        }
+                    } footer: {
+                        Text("Measure across the printed black square, excluding the white border. The standard sheet measures 40 mm. Changing the width restarts the rep at the teeth.")
+                    }
+                }
+                .navigationTitle("Printed QR size")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Cancel") { editingWidth = false }
+                    }
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Save") {
+                            if let width = enteredWidth, width != printedWidth {
+                                printedWidth = width
+                                origin = nil
+                                TrainerBlade.shared.enable(phase == .active, widthMM: width)
+                            }
+                            editingWidth = false
+                        }
+                        .disabled(enteredWidth == nil)
+                    }
+                }
+            }
+        }
+        .onAppear { TrainerBlade.shared.enable(phase == .active, widthMM: effectiveWidth) }
+        .onChange(of: phase) { _, value in TrainerBlade.shared.enable(value == .active, widthMM: effectiveWidth) }
         .onDisappear { TrainerBlade.shared.enable(false) }
     }
 
