@@ -185,3 +185,25 @@ The new digital station has a fixed entry and distinct codes on rear, upper and 
 In the private research build, a curved contact profile follows the blade lens. Vertices labeled as tongue deform locally when that profile approaches them, in addition to the existing tip-driven lift. The contact envelope approximates tissue response. At the same camera pose during partial lift, enabling local contact changed about 2.1% of the rendered pixels by more than three RGB levels in at least one channel. A free-angle control produced identical images. All 22 core tests passed. The signed build installed on the paired research iPhone. Physical marker coverage, force feedback and clinical fidelity are unverified. The reserved 24-sweep carton test remains on hold.
 
 The completed iPhone replay reported 101 generated frames. Two acquired the entry, 98 tracked, and the deliberate blank frame held. All 24 frames in the two digital sweeps tracked without the entry QR. The app loaded the research tissue rig. These are replay frames, separate from the reserved physical sweeps.
+
+### November 27, 2026 — marking and recovering a useful view
+
+The guided rep opens with an unlabelled airway. The learner locates the epiglottis, chooses a first view, releases until the opening is reduced to a sliver or disappears, and marks a useful view again. Each mark freezes its own frame. Reference outlines and POGO ranges appear after both sets of answers are submitted.
+
+The research build uses thirteen views from the modeled size-4 lift. The public build uses the synthetic teaching drawings. The on-screen controls exercise the sequence without a fixture. The Mac target input maps optical blade height to the same sequence. Its physical accuracy and the authored POGO references still need independent review. Reaching the stop, repeating a mark, or interrupting tracking cannot complete a rep.
+
+### November 27, 2026 — keeping the first mark through a tracking pause
+
+A missing blade pose or a gap between samples previously cleared the guided rep and recalibrated its starting height. The trainer now holds the last image, preserves the first marked view and resumes from the same Mac target calibration. Marking is disabled during a pause. If loss was still in progress, the learner must first see a useful opening again and then demonstrate a sustained loss with valid tracking. A loss already demonstrated before the interruption remains credited.
+
+Regression tests reproduced the reset and now verify that explicit tracking drops and gaps between samples preserve the first mark. The tests also reject a mark on a paused image and require fresh tracked evidence after reacquisition. The signed change installed as standalone staging build 5.
+
+### November 27, 2026 — hybrid coaching reaches the guided rep
+
+We spent three days on the printed practice mouth and its sensing. The competition judges the Firebase AI Logic hybrid session, and that path had only ever been compiled. No Firebase project existed. We stopped the sensor work and went back to the hybrid session.
+
+A separate Firebase project now backs the trainer, with AI Logic on the Gemini Developer API and App Check enforced. The coach had only been attached to the recorded rep. It is now one shared panel on both review screens. After the learner marks a view, loses it, recovers it and answers the landmark and POGO questions, the panel offers coaching on the iPhone's own model, or a hybrid session that tries the on-device model first and Gemini second. Cloud use still needs a separate yes for each rep.
+
+Research builds verify with an App Check debug token kept in the local, untracked Firebase configuration. The build with the debug token no longer carries the App Attest entitlement.
+
+A new simulator test walks the whole guided rep, allows the cloud fallback and waits for an answer from the live project. It returned cloud coaching in 38 seconds including the rep. The simulator has no on-device model, so this proves the Firebase route and the fallback. The on-device route on a phone is still unverified. All 27 core tests and both existing simulator walkthroughs passed.

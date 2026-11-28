@@ -164,12 +164,12 @@ struct AirwayLiftRig {
         update(camera: nil)
     }
 
-    func update(camera: simd_float4x4?) {
+    func update(camera: simd_float4x4?, measuredWeight: Float? = nil) {
         for (i, point) in dorsalInLens.enumerated() {
             let local = camera.map { (airwayFromWorld * $0 * SIMD4(point, 1)).xyz } ?? SIMD3<Float>(repeating: 10)
             geometry.setValue(NSValue(scnVector3: SCNVector3(local)), forKey: "dorsal\(i)")
         }
-        let weight = contact.weight(for: camera)
+        let weight = measuredWeight ?? contact.weight(for: camera)
         geometry.setValue(NSNumber(value: -0.0045 + 0.0135 * weight), forKey: "travel")
     }
 }

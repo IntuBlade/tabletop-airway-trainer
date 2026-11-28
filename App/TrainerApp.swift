@@ -17,6 +17,23 @@ let trainerTint = Color(uiColor: UIColor { traits in
     var body: some Scene {
         WindowGroup {
             #if DEBUG && canImport(BaseCamera)
+            #if FIXTURE_TRACKING
+            if ProcessInfo.processInfo.arguments.contains("--fixture-replay") {
+                FixtureSweepReplay()
+            } else if ProcessInfo.processInfo.arguments.contains("--fixture-live") {
+                NavigationStack { FixturePractice() }
+            } else { researchStart }
+            #else
+            researchStart
+            #endif
+            #else
+            TrainerHome()
+            #endif
+        }
+    }
+
+    #if DEBUG && canImport(BaseCamera)
+    @ViewBuilder private var researchStart: some View {
             if ProcessInfo.processInfo.arguments.contains("--station-replay") {
                 NavigationStack { StationReplayView() }
             } else if ProcessInfo.processInfo.arguments.contains("--blade-setup") {
@@ -24,11 +41,8 @@ let trainerTint = Color(uiColor: UIColor { traits in
             } else {
                 TrainerHome()
             }
-            #else
-            TrainerHome()
-            #endif
-        }
     }
+    #endif
 }
 
 private struct TrainerHome: View {
@@ -51,16 +65,25 @@ private struct TrainerHome: View {
 
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Find the view. Get it back.").font(.title2.bold())
-                        Text("Aim the blade camera at the trainer QR to start a live rep, or play the recorded exercise.")
+                        Text("Find the epiglottis, mark a useful view and recover it after a loss.")
                             .foregroundStyle(.secondary)
                     }
 
                     VStack(spacing: 12) {
-                        #if canImport(BaseCamera)
-                        NavigationLink { LiveBladeMotion() } label: {
-                            Label("Practice with blade", systemImage: "viewfinder")
+                        NavigationLink {
+                            GuidedPractice()
+                        } label: {
+                            Label("Start a guided rep", systemImage: "scope")
                                 .frame(maxWidth: .infinity, minHeight: 44)
                         }.buttonStyle(.borderedProminent).tint(trainerActionFill)
+                        #if canImport(BaseCamera)
+                        #if FIXTURE_TRACKING
+                        NavigationLink("Wall and slider practice") { FixturePractice() }
+                        #endif
+                        NavigationLink { LiveBladeMotion() } label: {
+                            Label("Open blade tracking", systemImage: "viewfinder")
+                                .frame(maxWidth: .infinity, minHeight: 44)
+                        }.buttonStyle(.bordered)
                         #endif
                         NavigationLink { StationReplayView() } label: {
                             Label("Play marker replay", systemImage: "play.square.stack")

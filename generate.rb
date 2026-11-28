@@ -46,11 +46,19 @@ if firebase
     link.product_ref = dependency
     app.frameworks_build_phase.files << link
   end
-  if File.exist?('GoogleService-Info.plist')
-    app.add_resources([project.main_group.new_file('GoogleService-Info.plist')])
+  # Each bundle identifier has its own Firebase registration. The research
+  # blade build names its own configuration file here.
+  config = ENV.fetch('TRAINER_FIREBASE_CONFIG', 'GoogleService-Info.plist')
+  if File.exist?(config)
+    raise 'Expected GoogleService-Info.plist' unless File.basename(config) == 'GoogleService-Info.plist'
+    app.add_resources([project.main_group.new_file(config)])
   end
-  app.build_configurations.each do |configuration|
-    configuration.build_settings['CODE_SIGN_ENTITLEMENTS'] = 'App/TrainerFirebase.entitlements'
+  # App Attest needs the capability on the App ID. Builds that verify with an
+  # App Check debug token leave it off.
+  if ENV['TRAINER_APP_ATTEST']
+    app.build_configurations.each do |configuration|
+      configuration.build_settings['CODE_SIGN_ENTITLEMENTS'] = 'App/TrainerFirebase.entitlements'
+    end
   end
 end
 checks.build_configurations.each do |configuration|
@@ -88,6 +96,25 @@ if ENV['TRAINER_BLADE_SDK']
   SH
 end
 
+if ENV['TRAINER_BLADE_SDK'] && ENV['TRAINER_OPENCV_DIR']
+  fixture = project.main_group.new_group('Fixture', 'Fixture')
+  app.add_file_references([fixture.new_file('FixtureReader.mm')])
+  app.add_resources([fixture.new_file('FixtureMarks.json')])
+  if ENV['TRAINER_FIXTURE_REPLAY']
+    ref = project.main_group.new_file('.fixture-local/FixtureReplay')
+    ref.last_known_file_type = 'folder'
+    app.add_resources([ref])
+  end
+  app.build_configurations.each do |cfg|
+    cv = File.realpath(ENV.fetch('TRAINER_OPENCV_DIR'))
+    cfg.build_settings['FRAMEWORK_SEARCH_PATHS[sdk=iphoneos*]'] << cv
+    cfg.build_settings['OTHER_LDFLAGS[sdk=iphoneos*]'] += ' -framework opencv2 -lc++ -lz -framework Accelerate -framework AVFoundation -framework CoreMedia -framework CoreVideo -framework VideoToolbox -framework CoreGraphics -framework AssetsLibrary'
+    cfg.build_settings['SWIFT_OBJC_BRIDGING_HEADER[sdk=iphoneos*]'] = 'Fixture/FixtureReader.h'
+    cfg.build_settings['SWIFT_ACTIVE_COMPILATION_CONDITIONS[sdk=iphoneos*]'] = '$(inherited) FIXTURE_TRACKING'
+    cfg.build_settings['CLANG_CXX_LANGUAGE_STANDARD'] = 'c++17'
+    cfg.build_settings['EXCLUDED_SOURCE_FILE_NAMES[sdk=iphonesimulator*]'] = 'FixtureReader.mm'
+  end
+end
 project.save
 scheme = Xcodeproj::XCScheme.new
 scheme.add_build_target(app)

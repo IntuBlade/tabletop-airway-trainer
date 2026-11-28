@@ -7,179 +7,185 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0BB7284E5887CA820FC19BD0 /* FirebaseCoach.swift in Sources */ = {isa = PBXBuildFile; fileRef = CD42F49547CCA8257F63D9FB /* FirebaseCoach.swift */; };
-		0EA971062B249511BF2CBCFC /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 892058C57C9826FCF4CD1AE7 /* Foundation.framework */; };
-		16908C901171C39404E04DE1 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 892058C57C9826FCF4CD1AE7 /* Foundation.framework */; };
-		1C3B75DDAB55F05D0A9A220C /* BladeMotionPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02431413B2A011B36352F529 /* BladeMotionPreview.swift */; };
-		32A9728A68B2798A42960F62 /* TablePlacement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E078C8B59BD3CB811BD60A4 /* TablePlacement.swift */; };
-		4DCC6EA44E63483C45A7A97C /* TrainerWorkflowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E9F2B4899832751DA250095 /* TrainerWorkflowTests.swift */; };
-		53E6B9802230939305332DA5 /* AirwayFrame.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7A9D03EF387C45153A13620 /* AirwayFrame.swift */; };
-		57C3DE6D9C307D47F5D448CC /* BladeRegistration.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3A87686C743088163823A70 /* BladeRegistration.swift */; };
-		63A2E8575AC78D40C291E8FA /* TrainerMarker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88F297B4C450C03C68C53B53 /* TrainerMarker.swift */; };
-		3586115A94FADCDE808BEA51 /* MarkerStation.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA2373FA65DA5B53DC17A1F0 /* MarkerStation.swift */; };
-		3CE05A0BD98BE452A6B8F081 /* StationReplay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CC56C037DB0673704540B81 /* StationReplay.swift */; };
-		7AC4A068DF665D8499F9F6BE /* TrainerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80EBF4655768DD5CD5CD505E /* TrainerApp.swift */; };
-		3E3A75E16261B3718A78AAAA /* StationReplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AFF1F6EF71CE51ECAAA43C2 /* StationReplayView.swift */; };
-		7CDF30330374CF3FE78D86EF /* Practice.swift in Sources */ = {isa = PBXBuildFile; fileRef = C08C7099848F6906FC750ECA /* Practice.swift */; };
-		9E8FE1F9ACA018AA8773A677 /* TissueLift.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4999964387348B6FEDF0A88F /* TissueLift.swift */; };
-		B73E4F33A86C438AABC87253 /* BladeSurfaceTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B40460C40614E4FBB3C5FEE /* BladeSurfaceTracker.swift */; };
-		AC66FE55CFDFEC645B907F25 /* LiveBlade.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1D353A0F6CBD1CBE54B26A0 /* LiveBlade.swift */; };
-		F04125A67628DF4D1B18CCDB /* TrainerHead.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 4CC10425E51A6A9CD0ABDD30 /* TrainerHead.usdz */; };
-		FA36EEE5570B4DF21AAA13D0 /* RecordedPractice.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9E7F84D68E581A39C10A6BD /* RecordedPractice.swift */; };
-		FAC3A658E3919DF2A75237ED /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 14558430A881B70C43F64605 /* Assets.xcassets */; };
+		0B12695DBACBC06178B9BF56 /* AirwayFrame.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8603FBBDD35AED1E6C7DA31B /* AirwayFrame.swift */; };
+		1D2CCB3ABD57D89B3DD34708 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 20FD0B9FB42E43547078A882 /* Assets.xcassets */; };
+		278D49D9F2864E088CA64E88 /* MarkerStation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 459BF2448A1FE5D195AD3823 /* MarkerStation.swift */; };
+		426EAE6C92E80579B8EF96AB /* StationReplay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4DA81EAF25445F861D12D937 /* StationReplay.swift */; };
+		50B7C40BD32B88657BF504A6 /* GuidedPractice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24F8A201D8B95DB16E0FFD0A /* GuidedPractice.swift */; };
+		55A0A08AE9FFF1047400AA1B /* FixturePractice.swift in Sources */ = {isa = PBXBuildFile; fileRef = CECCAE7C045455F256E5511A /* FixturePractice.swift */; };
+		76779FA8D55EA0334C8A18A6 /* TablePlacement.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBB759320B5C1AD26D9A4A5B /* TablePlacement.swift */; };
+		7DA1D056B44A7612DE4BCA14 /* TrainerMarker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 868848843DAC53211705E6D5 /* TrainerMarker.swift */; };
+		8C44A134705CCF9A9A5E2496 /* TrainerWorkflowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EEE940EFB03837488D56932 /* TrainerWorkflowTests.swift */; };
+		9D723D60244455C5817F2135 /* LiveBlade.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AE0A2C9EF47B6FCBE5817EC /* LiveBlade.swift */; };
+		9D982A2D79F2CEC39FCE9A00 /* Practice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 914E9FF18E5F26FF5785A8B3 /* Practice.swift */; };
+		A891F199FCAD13443A8397DA /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 73A8B71E039C9790FDCC4D8B /* Foundation.framework */; };
+		AB2AB16FB3CFE2F5BFBFE652 /* BladeMotionPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1A84E9D186A5B7BD06108F7 /* BladeMotionPreview.swift */; };
+		B7B096358AF5D7CD329A6372 /* RecordedPractice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CAC126F74CD38209B346687 /* RecordedPractice.swift */; };
+		B80009860D1EC0AD3270A330 /* TrainerHead.usdz in Resources */ = {isa = PBXBuildFile; fileRef = 956F5BFF3138BFB9C0236F12 /* TrainerHead.usdz */; };
+		CEEE5F6A213006E531EC3350 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 73A8B71E039C9790FDCC4D8B /* Foundation.framework */; };
+		DC6ADCEB4C996C1B0E9DA9F6 /* FirebaseCoach.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E618B8922D320B9FDFAE56A /* FirebaseCoach.swift */; };
+		DF429EC2073AEB08D760F342 /* TissueLift.swift in Sources */ = {isa = PBXBuildFile; fileRef = D22AE19CDCD971AFB260E9CD /* TissueLift.swift */; };
+		DF48A89DA6882B3C59CEE947 /* BladeRegistration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D3E15A74DB08BE1E1814BB5 /* BladeRegistration.swift */; };
+		E11470E5EB2799E62D2BFD8E /* TrainerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D13A5498254850D5B3D246B1 /* TrainerApp.swift */; };
+		EC1F017D56B58CE2BCA02F2A /* StationReplayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C8E82EDEABE7B69F115CD07 /* StationReplayView.swift */; };
+		EEBC76003B525D2F18A76792 /* BladeSurfaceTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1C84732C123AD9A83E1618A /* BladeSurfaceTracker.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		CDC7D68134C5FA52F52662A6 /* PBXContainerItemProxy */ = {
+		8A632AE48DE84614CAA94E88 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = D75DD07997784938070CA65B /* Project object */;
+			containerPortal = 43D17858F8E66C961956D0F6 /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 014D42EE50515140E2037990;
+			remoteGlobalIDString = 206E5290BDB6D8B743E5B2F6;
 			remoteInfo = TabletopTrainer;
 		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		02431413B2A011B36352F529 /* BladeMotionPreview.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BladeMotionPreview.swift; sourceTree = "<group>"; };
-		14558430A881B70C43F64605 /* Assets.xcassets */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		2E078C8B59BD3CB811BD60A4 /* TablePlacement.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TablePlacement.swift; sourceTree = "<group>"; };
-		4999964387348B6FEDF0A88F /* TissueLift.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TissueLift.swift; sourceTree = "<group>"; };
-		4B40460C40614E4FBB3C5FEE /* BladeSurfaceTracker.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BladeSurfaceTracker.swift; sourceTree = "<group>"; };
-		4CC10425E51A6A9CD0ABDD30 /* TrainerHead.usdz */ = {isa = PBXFileReference; includeInIndex = 1; path = TrainerHead.usdz; sourceTree = "<group>"; };
-		6E6DBA798808C7BEA38A1149 /* TabletopTrainer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TabletopTrainer.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		7E9F2B4899832751DA250095 /* TrainerWorkflowTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TrainerWorkflowTests.swift; sourceTree = "<group>"; };
-		80EBF4655768DD5CD5CD505E /* TrainerApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TrainerApp.swift; sourceTree = "<group>"; };
-		0AFF1F6EF71CE51ECAAA43C2 /* StationReplayView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StationReplayView.swift; sourceTree = "<group>"; };
-		88F297B4C450C03C68C53B53 /* TrainerMarker.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TrainerMarker.swift; sourceTree = "<group>"; };
-		AA2373FA65DA5B53DC17A1F0 /* MarkerStation.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MarkerStation.swift; sourceTree = "<group>"; };
-		2CC56C037DB0673704540B81 /* StationReplay.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StationReplay.swift; sourceTree = "<group>"; };
-		892058C57C9826FCF4CD1AE7 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
-		B2CBF00C84A071AE5023C566 /* TrainerWorkflowTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TrainerWorkflowTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		B9E7F84D68E581A39C10A6BD /* RecordedPractice.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RecordedPractice.swift; sourceTree = "<group>"; };
-		C08C7099848F6906FC750ECA /* Practice.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Practice.swift; sourceTree = "<group>"; };
-		C3A87686C743088163823A70 /* BladeRegistration.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BladeRegistration.swift; sourceTree = "<group>"; };
-		CD42F49547CCA8257F63D9FB /* FirebaseCoach.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FirebaseCoach.swift; sourceTree = "<group>"; };
-		E1D353A0F6CBD1CBE54B26A0 /* LiveBlade.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LiveBlade.swift; sourceTree = "<group>"; };
-		F7A9D03EF387C45153A13620 /* AirwayFrame.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AirwayFrame.swift; sourceTree = "<group>"; };
+		0C8E82EDEABE7B69F115CD07 /* StationReplayView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StationReplayView.swift; sourceTree = "<group>"; };
+		20FD0B9FB42E43547078A882 /* Assets.xcassets */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		24F8A201D8B95DB16E0FFD0A /* GuidedPractice.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GuidedPractice.swift; sourceTree = "<group>"; };
+		459BF2448A1FE5D195AD3823 /* MarkerStation.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MarkerStation.swift; sourceTree = "<group>"; };
+		4AE0A2C9EF47B6FCBE5817EC /* LiveBlade.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LiveBlade.swift; sourceTree = "<group>"; };
+		4DA81EAF25445F861D12D937 /* StationReplay.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StationReplay.swift; sourceTree = "<group>"; };
+		5CAC126F74CD38209B346687 /* RecordedPractice.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RecordedPractice.swift; sourceTree = "<group>"; };
+		5EEE940EFB03837488D56932 /* TrainerWorkflowTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TrainerWorkflowTests.swift; sourceTree = "<group>"; };
+		73A8B71E039C9790FDCC4D8B /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
+		8603FBBDD35AED1E6C7DA31B /* AirwayFrame.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AirwayFrame.swift; sourceTree = "<group>"; };
+		868848843DAC53211705E6D5 /* TrainerMarker.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TrainerMarker.swift; sourceTree = "<group>"; };
+		8D3E15A74DB08BE1E1814BB5 /* BladeRegistration.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BladeRegistration.swift; sourceTree = "<group>"; };
+		8E618B8922D320B9FDFAE56A /* FirebaseCoach.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FirebaseCoach.swift; sourceTree = "<group>"; };
+		914E9FF18E5F26FF5785A8B3 /* Practice.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = Practice.swift; sourceTree = "<group>"; };
+		94C536F7CF295E2B35808A75 /* TrainerWorkflowTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TrainerWorkflowTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		956F5BFF3138BFB9C0236F12 /* TrainerHead.usdz */ = {isa = PBXFileReference; includeInIndex = 1; path = TrainerHead.usdz; sourceTree = "<group>"; };
+		B1A84E9D186A5B7BD06108F7 /* BladeMotionPreview.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BladeMotionPreview.swift; sourceTree = "<group>"; };
+		CECCAE7C045455F256E5511A /* FixturePractice.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FixturePractice.swift; sourceTree = "<group>"; };
+		D005378D096C20DFD5B6A6F8 /* TabletopTrainer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TabletopTrainer.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D13A5498254850D5B3D246B1 /* TrainerApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TrainerApp.swift; sourceTree = "<group>"; };
+		D22AE19CDCD971AFB260E9CD /* TissueLift.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TissueLift.swift; sourceTree = "<group>"; };
+		DBB759320B5C1AD26D9A4A5B /* TablePlacement.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TablePlacement.swift; sourceTree = "<group>"; };
+		F1C84732C123AD9A83E1618A /* BladeSurfaceTracker.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BladeSurfaceTracker.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		0F0240CFBF264973ABBF6B74 /* Frameworks */ = {
+		8934EA21814435B4C4BF3D2A /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				16908C901171C39404E04DE1 /* Foundation.framework in Frameworks */,
+				A891F199FCAD13443A8397DA /* Foundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		823F5C661C7A98FF5CDAED04 /* Frameworks */ = {
+		90CEA75059509EE4168722D5 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0EA971062B249511BF2CBCFC /* Foundation.framework in Frameworks */,
+				CEEE5F6A213006E531EC3350 /* Foundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		042B6CDE78B3F9CF670E8EA7 /* Products */ = {
+		37C1600B50BB1EABF5EB1798 /* UITests */ = {
 			isa = PBXGroup;
 			children = (
-				6E6DBA798808C7BEA38A1149 /* TabletopTrainer.app */,
-				B2CBF00C84A071AE5023C566 /* TrainerWorkflowTests.xctest */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-		2E55DD847428A63EEAD96E63 /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				4C3ED46A87F721D8D8589451 /* iOS */,
-			);
-			name = Frameworks;
-			sourceTree = "<group>";
-		};
-		461B343F12E7442D7DF4F58D /* App */ = {
-			isa = PBXGroup;
-			children = (
-				F7A9D03EF387C45153A13620 /* AirwayFrame.swift */,
-				CD42F49547CCA8257F63D9FB /* FirebaseCoach.swift */,
-				B9E7F84D68E581A39C10A6BD /* RecordedPractice.swift */,
-				2E078C8B59BD3CB811BD60A4 /* TablePlacement.swift */,
-				80EBF4655768DD5CD5CD505E /* TrainerApp.swift */,
-				0AFF1F6EF71CE51ECAAA43C2 /* StationReplayView.swift */,
-				14558430A881B70C43F64605 /* Assets.xcassets */,
-				02431413B2A011B36352F529 /* BladeMotionPreview.swift */,
-				E1D353A0F6CBD1CBE54B26A0 /* LiveBlade.swift */,
-			);
-			name = App;
-			path = App;
-			sourceTree = "<group>";
-		};
-		4C3ED46A87F721D8D8589451 /* iOS */ = {
-			isa = PBXGroup;
-			children = (
-				892058C57C9826FCF4CD1AE7 /* Foundation.framework */,
-			);
-			name = iOS;
-			sourceTree = "<group>";
-		};
-		A3ED6254CB898151FD6BEB18 /* Artwork */ = {
-			isa = PBXGroup;
-			children = (
-				4CC10425E51A6A9CD0ABDD30 /* TrainerHead.usdz */,
-			);
-			name = Artwork;
-			path = Artwork;
-			sourceTree = "<group>";
-		};
-		DDFC4F62A012617286196311 /* Core */ = {
-			isa = PBXGroup;
-			children = (
-				C08C7099848F6906FC750ECA /* Practice.swift */,
-				C3A87686C743088163823A70 /* BladeRegistration.swift */,
-				88F297B4C450C03C68C53B53 /* TrainerMarker.swift */,
-				AA2373FA65DA5B53DC17A1F0 /* MarkerStation.swift */,
-				2CC56C037DB0673704540B81 /* StationReplay.swift */,
-				4999964387348B6FEDF0A88F /* TissueLift.swift */,
-				4B40460C40614E4FBB3C5FEE /* BladeSurfaceTracker.swift */,
-			);
-			name = Core;
-			path = Core;
-			sourceTree = "<group>";
-		};
-		E91305DA21841FD49395C47A = {
-			isa = PBXGroup;
-			children = (
-				042B6CDE78B3F9CF670E8EA7 /* Products */,
-				2E55DD847428A63EEAD96E63 /* Frameworks */,
-				461B343F12E7442D7DF4F58D /* App */,
-				DDFC4F62A012617286196311 /* Core */,
-				FDAC330A858A208050145B50 /* UITests */,
-				A3ED6254CB898151FD6BEB18 /* Artwork */,
-			);
-			sourceTree = "<group>";
-		};
-		FDAC330A858A208050145B50 /* UITests */ = {
-			isa = PBXGroup;
-			children = (
-				7E9F2B4899832751DA250095 /* TrainerWorkflowTests.swift */,
+				5EEE940EFB03837488D56932 /* TrainerWorkflowTests.swift */,
 			);
 			name = UITests;
 			path = UITests;
 			sourceTree = "<group>";
 		};
+		3B59232C8CD37614A0EBDD9C /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				73A8B71E039C9790FDCC4D8B /* Foundation.framework */,
+			);
+			name = iOS;
+			sourceTree = "<group>";
+		};
+		5CFCFFF74767AA0B931D947D = {
+			isa = PBXGroup;
+			children = (
+				5F138F255B51A8EFED764A4A /* Products */,
+				9CA28858F4F6CD8CE19A3E64 /* Frameworks */,
+				712D98D5B60CBE386D1CA024 /* App */,
+				B891FA2E338B9E5C8A87C10C /* Core */,
+				79504B04913A11FC14D62938 /* Artwork */,
+				37C1600B50BB1EABF5EB1798 /* UITests */,
+			);
+			sourceTree = "<group>";
+		};
+		5F138F255B51A8EFED764A4A /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D005378D096C20DFD5B6A6F8 /* TabletopTrainer.app */,
+				94C536F7CF295E2B35808A75 /* TrainerWorkflowTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		712D98D5B60CBE386D1CA024 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				8603FBBDD35AED1E6C7DA31B /* AirwayFrame.swift */,
+				B1A84E9D186A5B7BD06108F7 /* BladeMotionPreview.swift */,
+				8E618B8922D320B9FDFAE56A /* FirebaseCoach.swift */,
+				CECCAE7C045455F256E5511A /* FixturePractice.swift */,
+				24F8A201D8B95DB16E0FFD0A /* GuidedPractice.swift */,
+				4AE0A2C9EF47B6FCBE5817EC /* LiveBlade.swift */,
+				5CAC126F74CD38209B346687 /* RecordedPractice.swift */,
+				0C8E82EDEABE7B69F115CD07 /* StationReplayView.swift */,
+				DBB759320B5C1AD26D9A4A5B /* TablePlacement.swift */,
+				D13A5498254850D5B3D246B1 /* TrainerApp.swift */,
+				20FD0B9FB42E43547078A882 /* Assets.xcassets */,
+			);
+			name = App;
+			path = App;
+			sourceTree = "<group>";
+		};
+		79504B04913A11FC14D62938 /* Artwork */ = {
+			isa = PBXGroup;
+			children = (
+				956F5BFF3138BFB9C0236F12 /* TrainerHead.usdz */,
+			);
+			name = Artwork;
+			path = Artwork;
+			sourceTree = "<group>";
+		};
+		9CA28858F4F6CD8CE19A3E64 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				3B59232C8CD37614A0EBDD9C /* iOS */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		B891FA2E338B9E5C8A87C10C /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				8D3E15A74DB08BE1E1814BB5 /* BladeRegistration.swift */,
+				F1C84732C123AD9A83E1618A /* BladeSurfaceTracker.swift */,
+				459BF2448A1FE5D195AD3823 /* MarkerStation.swift */,
+				914E9FF18E5F26FF5785A8B3 /* Practice.swift */,
+				4DA81EAF25445F861D12D937 /* StationReplay.swift */,
+				D22AE19CDCD971AFB260E9CD /* TissueLift.swift */,
+				868848843DAC53211705E6D5 /* TrainerMarker.swift */,
+			);
+			name = Core;
+			path = Core;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		014D42EE50515140E2037990 /* TabletopTrainer */ = {
+		206E5290BDB6D8B743E5B2F6 /* TabletopTrainer */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = CA7D9F2397CDFE3736BC2415 /* Build configuration list for PBXNativeTarget "TabletopTrainer" */;
+			buildConfigurationList = A14D87D976890B2D34D38EAC /* Build configuration list for PBXNativeTarget "TabletopTrainer" */;
 			buildPhases = (
-				D471B58D39806F5B504C7F5C /* Sources */,
-				0F0240CFBF264973ABBF6B74 /* Frameworks */,
-				BEC3F8DC72B6890A0E8F7E8B /* Resources */,
+				42FEFCC5A7CDA0BFFFB0C3C7 /* Sources */,
+				8934EA21814435B4C4BF3D2A /* Frameworks */,
+				3A51838B9EC0D7A2D7BB819C /* Resources */,
 			);
 			buildRules = (
 			);
@@ -187,37 +193,37 @@
 			);
 			name = TabletopTrainer;
 			productName = TabletopTrainer;
-			productReference = 6E6DBA798808C7BEA38A1149 /* TabletopTrainer.app */;
+			productReference = D005378D096C20DFD5B6A6F8 /* TabletopTrainer.app */;
 			productType = "com.apple.product-type.application";
 		};
-		DDF8B0A4996EC73F48429FFD /* TrainerWorkflowTests */ = {
+		5FB17A92BB64F2E2FFCB1322 /* TrainerWorkflowTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 1468759CF25F68A2328AD733 /* Build configuration list for PBXNativeTarget "TrainerWorkflowTests" */;
+			buildConfigurationList = D3886AFFE15476EF75E976A9 /* Build configuration list for PBXNativeTarget "TrainerWorkflowTests" */;
 			buildPhases = (
-				E74ED942D2928E3D348C4D6C /* Sources */,
-				823F5C661C7A98FF5CDAED04 /* Frameworks */,
-				1CB2A701E191BD5AB89FCB98 /* Resources */,
+				A5A36AE1F29DC1E42046AD18 /* Sources */,
+				90CEA75059509EE4168722D5 /* Frameworks */,
+				83D42FDE0F62203A27C6210F /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				DDB1B4E64E4B1E8BA3694845 /* PBXTargetDependency */,
+				3EA6B75E38BAB4F2C7CF9B9C /* PBXTargetDependency */,
 			);
 			name = TrainerWorkflowTests;
 			productName = TrainerWorkflowTests;
-			productReference = B2CBF00C84A071AE5023C566 /* TrainerWorkflowTests.xctest */;
+			productReference = 94C536F7CF295E2B35808A75 /* TrainerWorkflowTests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		D75DD07997784938070CA65B /* Project object */ = {
+		43D17858F8E66C961956D0F6 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 1600;
 				LastUpgradeCheck = 1600;
 			};
-			buildConfigurationList = 66E47361F03ACD4CB63EC0BD /* Build configuration list for PBXProject "TabletopTrainer" */;
+			buildConfigurationList = EE4A0565804CFCB0AE78461B /* Build configuration list for PBXProject "TabletopTrainer" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -225,102 +231,84 @@
 				en,
 				Base,
 			);
-			mainGroup = E91305DA21841FD49395C47A;
+			mainGroup = 5CFCFFF74767AA0B931D947D;
 			minimizedProjectReferenceProxies = 0;
 			preferredProjectObjectVersion = 100;
-			productRefGroup = 042B6CDE78B3F9CF670E8EA7 /* Products */;
+			productRefGroup = 5F138F255B51A8EFED764A4A /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				014D42EE50515140E2037990 /* TabletopTrainer */,
-				DDF8B0A4996EC73F48429FFD /* TrainerWorkflowTests */,
+				206E5290BDB6D8B743E5B2F6 /* TabletopTrainer */,
+				5FB17A92BB64F2E2FFCB1322 /* TrainerWorkflowTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		1CB2A701E191BD5AB89FCB98 /* Resources */ = {
+		3A51838B9EC0D7A2D7BB819C /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1D2CCB3ABD57D89B3DD34708 /* Assets.xcassets in Resources */,
+				B80009860D1EC0AD3270A330 /* TrainerHead.usdz in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		BEC3F8DC72B6890A0E8F7E8B /* Resources */ = {
+		83D42FDE0F62203A27C6210F /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FAC3A658E3919DF2A75237ED /* Assets.xcassets in Resources */,
-				F04125A67628DF4D1B18CCDB /* TrainerHead.usdz in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		D471B58D39806F5B504C7F5C /* Sources */ = {
+		42FEFCC5A7CDA0BFFFB0C3C7 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				53E6B9802230939305332DA5 /* AirwayFrame.swift in Sources */,
-				0BB7284E5887CA820FC19BD0 /* FirebaseCoach.swift in Sources */,
-				FA36EEE5570B4DF21AAA13D0 /* RecordedPractice.swift in Sources */,
-				32A9728A68B2798A42960F62 /* TablePlacement.swift in Sources */,
-				7AC4A068DF665D8499F9F6BE /* TrainerApp.swift in Sources */,
-				3E3A75E16261B3718A78AAAA /* StationReplayView.swift in Sources */,
-				7CDF30330374CF3FE78D86EF /* Practice.swift in Sources */,
-				1C3B75DDAB55F05D0A9A220C /* BladeMotionPreview.swift in Sources */,
-				57C3DE6D9C307D47F5D448CC /* BladeRegistration.swift in Sources */,
-				AC66FE55CFDFEC645B907F25 /* LiveBlade.swift in Sources */,
-				63A2E8575AC78D40C291E8FA /* TrainerMarker.swift in Sources */,
-				3586115A94FADCDE808BEA51 /* MarkerStation.swift in Sources */,
-				3CE05A0BD98BE452A6B8F081 /* StationReplay.swift in Sources */,
-				9E8FE1F9ACA018AA8773A677 /* TissueLift.swift in Sources */,
-				B73E4F33A86C438AABC87253 /* BladeSurfaceTracker.swift in Sources */,
+				0B12695DBACBC06178B9BF56 /* AirwayFrame.swift in Sources */,
+				AB2AB16FB3CFE2F5BFBFE652 /* BladeMotionPreview.swift in Sources */,
+				DC6ADCEB4C996C1B0E9DA9F6 /* FirebaseCoach.swift in Sources */,
+				55A0A08AE9FFF1047400AA1B /* FixturePractice.swift in Sources */,
+				50B7C40BD32B88657BF504A6 /* GuidedPractice.swift in Sources */,
+				9D723D60244455C5817F2135 /* LiveBlade.swift in Sources */,
+				B7B096358AF5D7CD329A6372 /* RecordedPractice.swift in Sources */,
+				EC1F017D56B58CE2BCA02F2A /* StationReplayView.swift in Sources */,
+				76779FA8D55EA0334C8A18A6 /* TablePlacement.swift in Sources */,
+				E11470E5EB2799E62D2BFD8E /* TrainerApp.swift in Sources */,
+				DF48A89DA6882B3C59CEE947 /* BladeRegistration.swift in Sources */,
+				EEBC76003B525D2F18A76792 /* BladeSurfaceTracker.swift in Sources */,
+				278D49D9F2864E088CA64E88 /* MarkerStation.swift in Sources */,
+				9D982A2D79F2CEC39FCE9A00 /* Practice.swift in Sources */,
+				426EAE6C92E80579B8EF96AB /* StationReplay.swift in Sources */,
+				DF429EC2073AEB08D760F342 /* TissueLift.swift in Sources */,
+				7DA1D056B44A7612DE4BCA14 /* TrainerMarker.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		E74ED942D2928E3D348C4D6C /* Sources */ = {
+		A5A36AE1F29DC1E42046AD18 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4DCC6EA44E63483C45A7A97C /* TrainerWorkflowTests.swift in Sources */,
+				8C44A134705CCF9A9A5E2496 /* TrainerWorkflowTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		DDB1B4E64E4B1E8BA3694845 /* PBXTargetDependency */ = {
+		3EA6B75E38BAB4F2C7CF9B9C /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = TabletopTrainer;
-			target = 014D42EE50515140E2037990 /* TabletopTrainer */;
-			targetProxy = CDC7D68134C5FA52F52662A6 /* PBXContainerItemProxy */;
+			target = 206E5290BDB6D8B743E5B2F6 /* TabletopTrainer */;
+			targetProxy = 8A632AE48DE84614CAA94E88 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		50BAD02DE6AE00AA6D429814 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = "";
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = "";
-				CLANG_ENABLE_OBJC_WEAK = NO;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "Airway Practice";
-				INFOPLIST_KEY_FirebaseAppCheckTokenAutoRefreshEnabled = NO;
-				INFOPLIST_KEY_NSCameraUsageDescription = "Place the virtual training head on the table.";
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.intublade.tabletoptrainer;
-				SDKROOT = iphoneos;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 1;
-			};
-			name = Debug;
-		};
-		5C92FF7D8DF8E1FD290FB611 /* Debug */ = {
+		A4CA220192B4CE5B765D4DF9 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = NO;
@@ -334,61 +322,7 @@
 			};
 			name = Debug;
 		};
-		6C866B636CFAA366D5D7F9EE /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_ANALYZER_NONNULL = YES;
-				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
-				CLANG_CXX_LIBRARY = "libc++";
-				CLANG_ENABLE_MODULES = YES;
-				CLANG_ENABLE_OBJC_ARC = YES;
-				CLANG_ENABLE_OBJC_WEAK = YES;
-				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
-				CLANG_WARN_BOOL_CONVERSION = YES;
-				CLANG_WARN_COMMA = YES;
-				CLANG_WARN_CONSTANT_CONVERSION = YES;
-				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
-				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_EMPTY_BODY = YES;
-				CLANG_WARN_ENUM_CONVERSION = YES;
-				CLANG_WARN_INFINITE_RECURSION = YES;
-				CLANG_WARN_INT_CONVERSION = YES;
-				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
-				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
-				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
-				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
-				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
-				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
-				CLANG_WARN_STRICT_PROTOTYPES = YES;
-				CLANG_WARN_SUSPICIOUS_MOVE = YES;
-				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
-				CLANG_WARN_UNREACHABLE_CODE = YES;
-				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				COPY_PHASE_STRIP = NO;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				ENABLE_NS_ASSERTIONS = NO;
-				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu11;
-				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
-				GCC_WARN_UNDECLARED_SELECTOR = YES;
-				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
-				GCC_WARN_UNUSED_FUNCTION = YES;
-				GCC_WARN_UNUSED_VARIABLE = YES;
-				MTL_ENABLE_DEBUG_INFO = NO;
-				MTL_FAST_MATH = YES;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_COMPILATION_MODE = wholemodule;
-				SWIFT_OPTIMIZATION_LEVEL = "-O";
-				SWIFT_VERSION = 5.0;
-			};
-			name = Release;
-		};
-		7C3F6163F25232E283D821CA /* Debug */ = {
+		A59FA8917575F70DA77D02F4 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -449,7 +383,61 @@
 			};
 			name = Debug;
 		};
-		945FAA4E976EE3E3EFE0D2F5 /* Release */ = {
+		AA82F00D7F7C8E0814A42DE7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		B7B5AA2447BC022A4CE2842A /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CLANG_ENABLE_OBJC_WEAK = NO;
@@ -464,7 +452,27 @@
 			};
 			name = Release;
 		};
-		B18AE424F59E8A41431B8F64 /* Release */ = {
+		F4582090E16E2371A770A1ED /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = "";
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = "";
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Airway Practice";
+				INFOPLIST_KEY_FirebaseAppCheckTokenAutoRefreshEnabled = NO;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Place the virtual training head on the table.";
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.intublade.tabletoptrainer;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		F65C25CB15D743A51F82BA79 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = "";
@@ -488,34 +496,34 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		1468759CF25F68A2328AD733 /* Build configuration list for PBXNativeTarget "TrainerWorkflowTests" */ = {
+		A14D87D976890B2D34D38EAC /* Build configuration list for PBXNativeTarget "TabletopTrainer" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				945FAA4E976EE3E3EFE0D2F5 /* Release */,
-				5C92FF7D8DF8E1FD290FB611 /* Debug */,
+				F65C25CB15D743A51F82BA79 /* Release */,
+				F4582090E16E2371A770A1ED /* Debug */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		66E47361F03ACD4CB63EC0BD /* Build configuration list for PBXProject "TabletopTrainer" */ = {
+		D3886AFFE15476EF75E976A9 /* Build configuration list for PBXNativeTarget "TrainerWorkflowTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				7C3F6163F25232E283D821CA /* Debug */,
-				6C866B636CFAA366D5D7F9EE /* Release */,
+				B7B5AA2447BC022A4CE2842A /* Release */,
+				A4CA220192B4CE5B765D4DF9 /* Debug */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		CA7D9F2397CDFE3736BC2415 /* Build configuration list for PBXNativeTarget "TabletopTrainer" */ = {
+		EE4A0565804CFCB0AE78461B /* Build configuration list for PBXProject "TabletopTrainer" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				B18AE424F59E8A41431B8F64 /* Release */,
-				50BAD02DE6AE00AA6D429814 /* Debug */,
+				A59FA8917575F70DA77D02F4 /* Debug */,
+				AA82F00D7F7C8E0814A42DE7 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
-	rootObject = D75DD07997784938070CA65B /* Project object */;
+	rootObject = 43D17858F8E66C961956D0F6 /* Project object */;
 }

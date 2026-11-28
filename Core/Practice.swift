@@ -77,7 +77,13 @@ struct PracticeFrame: Codable, Identifiable {
     var plausible = true
     var ambiguous: Landmark?
 
+    // Set together for a rendered still. Schematic frames use the drawing below.
+    var renderName: String?
+    var renderedEpiglottis: LandmarkRegion?
+    var renderedOpening: LandmarkRegion?
+
     func region(for landmark: Landmark) -> LandmarkRegion? {
+        if renderName != nil { return landmark == .epiglottis ? renderedEpiglottis : renderedOpening }
         switch landmark {
         case .epiglottis: return LandmarkRegion(center: .init(x: 0.5 + shift, y: 0.33), radiusX: 0.16, radiusY: 0.081)
         case .opening:
@@ -186,6 +192,99 @@ struct CompletedRep: Codable, Identifiable {
         guard first >= 0, first < recovered, recovered < PracticePath.recorded.frames.count,
               answers.count == 2, answers.allSatisfy({ $0.complete }) else {
             throw DecodingError.dataCorruptedError(forKey: .answers, in: values, debugDescription: "Incomplete rep")
+        }
+    }
+}
+
+// The moving view, captures and feedback all use the same immutable lesson frames.
+struct GuidedRep {
+    enum Stage { case find, mark, lose, recover, firstQuestions, secondQuestions, review }
+    static let maximumSampleGap = 0.4
+    private(set) var stage = Stage.find
+    private(set) var first: PracticeFrame?
+    private(set) var recovered: PracticeFrame?
+    private(set) var current: PracticeFrame?
+    private(set) var trackingPaused = false
+    private var lastSample: Double?
+    private var lossStart: Double?
+    private var readyToObserveLoss = false
+    var answers = [StillAnswer(), StillAnswer()]
+
+    var capturing: Bool { [.find, .mark, .lose, .recover].contains(stage) }
+    var needsUsefulViewBeforeLoss: Bool { stage == .lose && !readyToObserveLoss }
+
+    mutating func observe(_ frame: PracticeFrame?, at time: Double) {
+        guard capturing else { return }
+        guard let frame, frame.tracked, frame.plausible, frame.opening != nil else {
+            pauseTracking()
+            return
+        }
+        if let lastSample {
+            guard time > lastSample else { return }
+            if time - lastSample > Self.maximumSampleGap { pauseTracking() }
+        }
+        trackingPaused = false
+        lastSample = time
+        current = frame
+        guard stage == .lose else { return }
+        if useful(frame) {
+            readyToObserveLoss = true
+            lossStart = nil
+            return
+        }
+        guard readyToObserveLoss else { return }
+        if let lossStart, time - lossStart >= PracticePath.recorded.minimumLoss {
+            stage = .recover
+        } else if lossStart == nil {
+            lossStart = time
+        }
+    }
+
+    mutating func pauseTracking() {
+        guard capturing, current != nil else { return }
+        trackingPaused = true
+        lossStart = nil
+        readyToObserveLoss = false
+    }
+
+    mutating func identify(_ point: ImagePoint) -> Bool {
+        guard !trackingPaused, stage == .find, let current,
+              current.assess(.point(point), for: .epiglottis) == .correct else {
+            return false
+        }
+        stage = .mark
+        return true
+    }
+
+    // For this exercise a sliver of the opening is a loss of the useful view.
+    private func useful(_ frame: PracticeFrame) -> Bool {
+        [.partial, .broad, .full].contains(frame.opening)
+    }
+
+    mutating func mark() -> Bool {
+        guard !trackingPaused, let current, useful(current) else { return false }
+        switch stage {
+        case .mark:
+            first = current
+            readyToObserveLoss = true
+            stage = .lose
+        case .recover: recovered = current; stage = .firstQuestions
+        default: return false
+        }
+        return true
+    }
+
+    mutating func submit() {
+        if stage == .firstQuestions && answers[0].complete { stage = .secondQuestions }
+        else if stage == .secondQuestions && answers.allSatisfy({ $0.complete }) { stage = .review }
+    }
+
+    var matchedBothViews: Bool {
+        guard stage == .review, let first, let recovered else { return false }
+        return zip([first, recovered], answers).allSatisfy { frame, answer in
+            answer.estimate == frame.opening && Landmark.allCases.allSatisfy {
+                frame.assess(answer[$0], for: $0) == .correct
+            }
         }
     }
 }

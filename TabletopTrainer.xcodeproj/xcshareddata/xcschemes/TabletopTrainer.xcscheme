@@ -14,7 +14,7 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "014D42EE50515140E2037990"
+               BlueprintIdentifier = "206E5290BDB6D8B743E5B2F6"
                BuildableName = "TabletopTrainer.app"
                BlueprintName = "TabletopTrainer"
                ReferencedContainer = "container:TabletopTrainer.xcodeproj">
@@ -30,7 +30,7 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "014D42EE50515140E2037990"
+            BlueprintIdentifier = "206E5290BDB6D8B743E5B2F6"
             BuildableName = "TabletopTrainer.app"
             BlueprintName = "TabletopTrainer"
             ReferencedContainer = "container:TabletopTrainer.xcodeproj">
@@ -41,7 +41,7 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "DDF8B0A4996EC73F48429FFD"
+               BlueprintIdentifier = "5FB17A92BB64F2E2FFCB1322"
                BuildableName = "TrainerWorkflowTests.xctest"
                BlueprintName = "TrainerWorkflowTests"
                ReferencedContainer = "container:TabletopTrainer.xcodeproj">
@@ -63,7 +63,7 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "014D42EE50515140E2037990"
+            BlueprintIdentifier = "206E5290BDB6D8B743E5B2F6"
             BuildableName = "TabletopTrainer.app"
             BlueprintName = "TabletopTrainer"
             ReferencedContainer = "container:TabletopTrainer.xcodeproj">
@@ -80,7 +80,7 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "014D42EE50515140E2037990"
+            BlueprintIdentifier = "206E5290BDB6D8B743E5B2F6"
             BuildableName = "TabletopTrainer.app"
             BlueprintName = "TabletopTrainer"
             ReferencedContainer = "container:TabletopTrainer.xcodeproj">

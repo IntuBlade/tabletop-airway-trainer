@@ -143,7 +143,7 @@ private struct ExplorePractice: View {
     }
 }
 
-private struct FrameQuestions: View {
+struct FrameQuestions: View {
     let frame: PracticeFrame
     let title: String
     @Binding var answer: StillAnswer
@@ -171,6 +171,7 @@ private struct FrameQuestions: View {
                     LabeledContent(landmark.title, value: tagLabel(answer[landmark]))
                         .font(.subheadline)
                 }
+                Text("Your POGO range").font(.headline)
                 Picker("POGO range", selection: $answer.estimate) {
                     Text("Select range").tag(Opening?.none)
                     ForEach(Opening.allCases, id: \.self) { Text($0.band).tag(Optional($0)) }
@@ -196,10 +197,6 @@ struct PracticeReview: View {
     let rep: CompletedRep
     var retry: (() -> Void)? = nil
     @State private var replay = 0.0
-    @State private var askingCloud = false
-    @State private var request: CoachRequestID?
-    @State private var coaching: CoachResult?
-    @State private var coachAttempted = false
 
     private var result: Recovery { path.recovery(first: rep.first, last: rep.recovered) }
 
@@ -231,45 +228,13 @@ struct PracticeReview: View {
                 Text("Next rep").font(.headline)
                 Text(result == .recovered ? "Try recovering the view at a different blade angle." :
                         "On your next rep, make the loss of view clear before you mark the return.")
-                if FirebaseCoach.isConfigured { coachControls }
+                if FirebaseCoach.isConfigured { CoachPanel(coachRequest: CoachRequest(rep: rep, path: path)) }
                 if let retry {
                     Button("Try another rep", action: retry).buttonStyle(.borderedProminent).tint(trainerActionFill).controlSize(.large)
                 }
             }.padding(20).frame(maxWidth: 620).frame(maxWidth: .infinity)
         }
-        .task(id: request) {
-            guard let request else { return }
-            let result = await FirebaseCoach.coach(CoachRequest(rep: rep, path: path), allowCloud: request.allowCloud)
-            guard !Task.isCancelled else { return }
-            coaching = result
-            coachAttempted = true
-            self.request = nil
-        }
-        .confirmationDialog("Allow cloud coaching for this rep?", isPresented: $askingCloud, titleVisibility: .visible) {
-            Button("Allow for this rep") { request = CoachRequestID(allowCloud: true) }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("If the iPhone model is unavailable, Firebase receives the synthetic practice outcome and the marked and reference ranges.")
-        }
         .navigationTitle("Rep review")
         .navigationBarTitleDisplayMode(.inline)
-    }
-
-    private var coachControls: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            if let coaching {
-                Text(coaching.route.rawValue).font(.subheadline.bold())
-                Text(coaching.text)
-            } else if coachAttempted {
-                Text("Coaching unavailable. Use the next-rep objective above.").foregroundStyle(.secondary)
-            }
-            if request != nil { ProgressView("Checking coaching") }
-            Button("Coach on this iPhone") { request = CoachRequestID(allowCloud: false) }
-                .disabled(request != nil)
-                .frame(minHeight: 44)
-            Button("Allow cloud fallback") { askingCloud = true }
-                .disabled(request != nil)
-                .frame(minHeight: 44)
-        }
     }
 }

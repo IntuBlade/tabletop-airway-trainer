@@ -30,6 +30,20 @@ final class TrainerBlade: NSObject, CameraDelegate, @unchecked Sendable {
     private var analyzedCount = 0
     private var lastReport = -Double.infinity
     private var frame: BladeFrame?
+    #if FIXTURE_TRACKING
+    private var fixtureMode = false
+    private var fixtureSample: FixtureSample?
+    private var fixtureReader: FixtureReader?
+    private var fixtureGeneration = -1
+    func enableFixture(_ enabled: Bool) {
+        enable(enabled, fixture: enabled)
+    }
+    func currentFixture() -> (FixtureSample?, String) {
+        lock.withLock {
+            (fixtureSample.flatMap { CACurrentMediaTime() - $0.time < 0.4 ? $0 : nil }, connection)
+        }
+    }
+    #endif
     private var widthMM = TrainerMarker.standardWidthMM
     // Only the serial image worker reads or writes these two fields.
     private var tracker = BladeSurfaceTracker(widthMM: TrainerMarker.standardWidthMM)
@@ -60,7 +74,7 @@ final class TrainerBlade: NSObject, CameraDelegate, @unchecked Sendable {
         CameraManager.share().startInitialize()
     }
 
-    func enable(_ enabled: Bool, widthMM: Double = TrainerMarker.standardWidthMM, resetRep: Bool = true) {
+    func enable(_ enabled: Bool, widthMM: Double = TrainerMarker.standardWidthMM, resetRep: Bool = true, fixture: Bool = false) {
         lock.withLock {
             if resetRep {
                 rep += 1
@@ -68,6 +82,10 @@ final class TrainerBlade: NSObject, CameraDelegate, @unchecked Sendable {
                 frameCount = 0
                 analyzedCount = 0
             }
+            #if FIXTURE_TRACKING
+            fixtureMode = fixture
+            fixtureSample = nil
+            #endif
             active = enabled
             generation += 1
             self.widthMM = widthMM
@@ -110,6 +128,20 @@ final class TrainerBlade: NSObject, CameraDelegate, @unchecked Sendable {
         guard let ticket else { return }
         worker.async {
             let cg = image.cgImage ?? image.ciImage.flatMap { self.imageContext.createCGImage($0, from: $0.extent) }
+            #if FIXTURE_TRACKING
+            if self.lock.withLock({ self.fixtureMode && self.generation == ticket.generation }) {
+                if self.fixtureGeneration != ticket.generation {
+                    self.fixtureReader = FixtureSample.reader()
+                    self.fixtureGeneration = ticket.generation
+                }
+                let sample = cg.flatMap { buffer in self.fixtureReader.map { FixtureSample(image: buffer, reader: $0, time: now, field: 60) } }
+                self.lock.withLock {
+                    self.busy = false
+                    if self.generation == ticket.generation { self.fixtureSample = sample }
+                }
+                return
+            }
+            #endif
             if self.trackerGeneration != ticket.generation {
                 self.tracker = BladeSurfaceTracker(widthMM: ticket.widthMM, resume: ticket.resume)
                 self.trackerGeneration = ticket.generation
@@ -158,7 +190,12 @@ final class TrainerBlade: NSObject, CameraDelegate, @unchecked Sendable {
     func receiveDeviceConflicted(_ conflicted: Bool) { if conflicted { invalidate(); setConnection("Blade in use by another app") } }
 
     private func invalidate() {
-        lock.withLock { generation += 1; frame = nil; rawPreview = nil; sawFrame = false }
+        lock.withLock {
+            generation += 1; frame = nil; rawPreview = nil; sawFrame = false
+            #if FIXTURE_TRACKING
+            fixtureSample = nil
+            #endif
+        }
     }
 }
 

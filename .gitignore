@@ -4,3 +4,5 @@ TabletopTrainerFirebase.xcodeproj/
 
 TabletopTrainer*Blade.xcodeproj/
 Tools/__pycache__/
+
+.fixture-local/

@@ -235,3 +235,107 @@ extension MarkerDetectorTests {
         }
     }
 }
+
+final class GuidedRepTests: XCTestCase {
+    let stop = PracticeFrame(id: 12, time: 0, opening: .full, shift: 0.08)
+    let sliver = PracticeFrame(id: 1, time: 0, opening: .narrow, shift: -0.07)
+    let partial = PracticeFrame(id: 6, time: 0, opening: .partial, shift: 0)
+    var rep = GuidedRep()
+
+    func testStopAndRepeatedMarksCannotAdvance() {
+        for t in 0...20 { rep.observe(stop, at: Double(t) / 10) }
+        XCTAssertFalse(rep.identify(.init(x: 0.1, y: 0.9)))
+        XCTAssertFalse(rep.mark())
+        XCTAssertTrue(rep.identify(stop.region(for: .epiglottis)!.center))
+        XCTAssertTrue(rep.mark())
+        for t in 21...40 { rep.observe(stop, at: Double(t) / 10) }
+        XCTAssertFalse(rep.mark())
+        rep.submit()
+        XCTAssertEqual(rep.stage, .lose)
+        XCTAssertFalse(rep.matchedBothViews)
+    }
+
+    func testLostSamplesCannotBecomeAnatomicalLoss() {
+        start()
+        rep.observe(sliver, at: 0.1)
+        rep.observe(nil, at: 0.2)
+        XCTAssertTrue(rep.trackingPaused)
+        XCTAssertEqual(rep.current?.id, sliver.id)
+        XCTAssertEqual(rep.stage, .lose)
+        XCTAssertEqual(rep.first?.id, stop.id)
+        for tick in 3...13 { rep.observe(sliver, at: Double(tick) / 10) }
+        XCTAssertFalse(rep.trackingPaused)
+        XCTAssertEqual(rep.stage, .lose)
+        rep.observe(partial, at: 1.4)
+        XCTAssertFalse(rep.mark())
+        for tick in 15...25 { rep.observe(sliver, at: Double(tick) / 10) }
+        XCTAssertEqual(rep.stage, .recover)
+        rep.observe(partial, at: 2.6)
+        XCTAssertTrue(rep.mark())
+        XCTAssertEqual(rep.first?.id, stop.id)
+        XCTAssertEqual(rep.recovered?.id, partial.id)
+    }
+
+    func testUnreportedGapDoesNotResetOrCreditLoss() {
+        start()
+        rep.observe(sliver, at: 0.2)
+        rep.observe(sliver, at: 1.1)
+        XCTAssertEqual(rep.stage, .lose)
+        XCTAssertEqual(rep.first?.id, stop.id)
+        rep.observe(partial, at: 1.2)
+        XCTAssertFalse(rep.mark())
+    }
+
+    func testPausedFrameCannotBeMarkedAndConfirmedLossSurvivesPause() {
+        start()
+        for tick in 1...11 { rep.observe(sliver, at: Double(tick) / 10) }
+        rep.observe(partial, at: 1.2)
+        rep.pauseTracking()
+        XCTAssertEqual(rep.stage, .recover)
+        XCTAssertFalse(rep.mark())
+        rep.observe(partial, at: 1.3)
+        XCTAssertTrue(rep.mark())
+        XCTAssertEqual(rep.first?.id, stop.id)
+    }
+
+    func testCapturesAndAnswersAreIndependent() {
+        captures()
+        rep.submit()
+        XCTAssertEqual(rep.stage, .firstQuestions)
+        rep.answers[0] = answer(stop)
+        rep.submit()
+        rep.answers[1] = answer(partial)
+        rep.submit()
+        XCTAssertEqual(rep.stage, .review)
+        XCTAssertTrue(rep.matchedBothViews)
+        rep.answers[1].opening = .unsure
+        XCTAssertFalse(rep.matchedBothViews)
+        rep.answers[1] = answer(partial)
+        rep.answers[0].estimate = .hidden
+        XCTAssertFalse(rep.matchedBothViews)
+    }
+
+    private func start(at t: Double = 0) {
+        rep.observe(stop, at: t)
+        XCTAssertTrue(rep.identify(stop.region(for: .epiglottis)!.center))
+        XCTAssertTrue(rep.mark())
+    }
+
+    private func captures() {
+        start()
+        rep.observe(sliver, at: 0.1)
+        rep.observe(partial, at: 0.3)
+        XCTAssertFalse(rep.mark())
+        for i in 4...14 { rep.observe(sliver, at: Double(i) / 10) }
+        XCTAssertFalse(rep.mark())
+        rep.observe(partial, at: 1.5)
+        XCTAssertTrue(rep.mark())
+        XCTAssertEqual(rep.first?.id, stop.id)
+        XCTAssertEqual(rep.recovered?.id, partial.id)
+    }
+
+    private func answer(_ frame: PracticeFrame) -> StillAnswer {
+        StillAnswer(epiglottis: .point(frame.region(for: .epiglottis)!.center),
+                    opening: .point(frame.region(for: .opening)!.center), estimate: frame.opening)
+    }
+}

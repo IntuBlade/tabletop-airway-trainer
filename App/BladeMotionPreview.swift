@@ -47,6 +47,7 @@ struct SyntheticAirwayCamera: UIViewRepresentable {
     let mouthFromCamera: simd_float4x4
     var useResearchScene = false
     var trackingAvailable = true
+    var measuredWeight: Float? = nil
 
     final class Coordinator {
         var lift: AirwayLiftRig?
@@ -153,12 +154,12 @@ struct SyntheticAirwayCamera: UIViewRepresentable {
         camera.simdTransform = mouthFromCamera
         scene.rootNode.addChildNode(camera)
         view.pointOfView = camera
-        context.coordinator.lift?.update(camera: trackingAvailable ? mouthFromCamera : nil)
+        context.coordinator.lift?.update(camera: trackingAvailable ? mouthFromCamera : nil, measuredWeight: measuredWeight)
         return view
     }
 
     func updateUIView(_ view: SCNView, context: Context) {
         view.pointOfView?.simdTransform = mouthFromCamera
-        context.coordinator.lift?.update(camera: trackingAvailable ? mouthFromCamera : nil)
+        context.coordinator.lift?.update(camera: trackingAvailable ? mouthFromCamera : nil, measuredWeight: measuredWeight)
     }
 }

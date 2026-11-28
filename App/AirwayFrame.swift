@@ -9,21 +9,25 @@ struct AirwayFrame: View {
     var body: some View {
         Canvas { context, size in
             let bounds = CGRect(origin: .zero, size: size)
-            context.fill(Path(bounds), with: .color(Color(red: 0.20, green: 0.088, blue: 0.082)))
+            let rendered = frame.renderName.flatMap { GuidedLesson.images[$0] }
+            if let rendered {
+                context.draw(Image(uiImage: rendered), in: bounds)
+            } else {
+                context.fill(Path(bounds), with: .color(Color(red: 0.20, green: 0.088, blue: 0.082)))
 
-            let centerX = 0.5 + frame.shift
-            let surround = LandmarkRegion(center: .init(x: centerX, y: 0.56), radiusX: 0.33, radiusY: 0.40)
-            context.fill(Path(ellipseIn: rect(surround, size)), with: .color(Color(red: 0.49, green: 0.26, blue: 0.23)))
-            let throat = LandmarkRegion(center: .init(x: centerX, y: 0.56), radiusX: 0.22, radiusY: 0.31)
-            context.fill(Path(ellipseIn: rect(throat, size)), with: .color(Color(red: 0.30, green: 0.13, blue: 0.12)))
-
+                let centerX = 0.5 + frame.shift
+                let surround = LandmarkRegion(center: .init(x: centerX, y: 0.56), radiusX: 0.33, radiusY: 0.40)
+                context.fill(Path(ellipseIn: rect(surround, size)), with: .color(Color(red: 0.49, green: 0.26, blue: 0.23)))
+                let throat = LandmarkRegion(center: .init(x: centerX, y: 0.56), radiusX: 0.22, radiusY: 0.31)
+                context.fill(Path(ellipseIn: rect(throat, size)), with: .color(Color(red: 0.30, green: 0.13, blue: 0.12)))
+            }
             for landmark in Landmark.allCases {
                 if let region = frame.region(for: landmark) {
                     let color: Color = landmark == .epiglottis
                         ? Color(red: 0.73, green: 0.43, blue: 0.36)
                         : Color(red: 0.08, green: 0.035, blue: 0.036)
                     let contour = Path(ellipseIn: rect(region, size))
-                    context.fill(contour, with: .color(color))
+                    if rendered == nil { context.fill(contour, with: .color(color)) }
                     if showReference { context.stroke(contour, with: .color(.mint), lineWidth: 2) }
                 }
                 if case let .point(point)? = selections?[landmark] {
@@ -32,9 +36,8 @@ struct AirwayFrame: View {
                 }
             }
         }
-        .aspectRatio(4 / 3.0, contentMode: .fit)
+        .aspectRatio(frame.renderName == nil ? 4 / 3.0 : 1.6, contentMode: .fit)
         .clipShape(.rect(cornerRadius: 14))
-        .accessibilityLabel("Synthetic airway frame")
         .overlay {
             if let tag {
                 GeometryReader { geometry in
@@ -44,6 +47,8 @@ struct AirwayFrame: View {
                 }
             }
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(frame.renderName == nil ? "Synthetic airway frame" : "Rendered airway frame")
     }
 
     private func rect(_ region: LandmarkRegion, _ size: CGSize) -> CGRect {
